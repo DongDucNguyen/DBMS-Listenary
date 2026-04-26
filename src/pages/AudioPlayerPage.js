@@ -77,6 +77,7 @@ export class AudioPlayerPage {
       const isAdmin = user && user.roleId === 1;
 
       if (!isApproved && !isOwner && !isAdmin) {
+        this.book = null;
         throw new Error('Access denied: Book is pending approval.');
       }
 

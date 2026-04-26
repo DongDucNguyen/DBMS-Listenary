@@ -135,6 +135,25 @@ const mockDbApiPlugin = () => ({
               delete book.rejectedAt;
               delete book.rejectionReason;
 
+              // Edit chapters
+              if (payload.chapters && Array.isArray(payload.chapters)) {
+                if (!dbData.audioChapter) dbData.audioChapter = [];
+                // remove old chapters
+                dbData.audioChapter = dbData.audioChapter.filter(c => c.bookId !== bookId);
+                // add new ones
+                payload.chapters.forEach((ch, idx) => {
+                  const newChapId = dbData.audioChapter.length > 0 ? Math.max(...dbData.audioChapter.map(x => x.id)) + 1 : 1;
+                  dbData.audioChapter.push({
+                    id: newChapId,
+                    bookId: bookId,
+                    chapterNumber: idx + 1,
+                    name: ch.name || `Chương ${idx + 1}`,
+                    duration: ch.duration || 0,
+                    audiobookUrl: ch.audiobookUrl || ''
+                  });
+                });
+              }
+
               fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ success: true, book }));
@@ -250,6 +269,22 @@ const mockDbApiPlugin = () => ({
               BookId: newId,
               AuthorId: parseInt(payload.authorId)
             });
+
+            // Thêm Chapters (nếu có)
+            if (payload.chapters && Array.isArray(payload.chapters)) {
+              if (!dbData.audioChapter) dbData.audioChapter = [];
+              payload.chapters.forEach((ch, idx) => {
+                const newChapId = dbData.audioChapter.length > 0 ? Math.max(...dbData.audioChapter.map(x => x.id)) + 1 : 1;
+                dbData.audioChapter.push({
+                  id: newChapId,
+                  bookId: newId,
+                  chapterNumber: idx + 1,
+                  name: ch.name || `Chương ${idx + 1}`,
+                  duration: ch.duration || 0,
+                  audiobookUrl: ch.audiobookUrl || ''
+                });
+              });
+            }
 
             fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
             res.setHeader('Content-Type', 'application/json');

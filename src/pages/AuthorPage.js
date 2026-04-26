@@ -37,6 +37,7 @@ export class AuthorPage {
       this.allUsers = data.user;
       this.categories = data.category || [];
       this.publishingHouses = data.publishingHouse || [];
+      this.allData = data;
     } catch (err) {
       console.error(err);
     } finally {
@@ -192,16 +193,7 @@ export class AuthorPage {
                   <p style="font-size:0.6rem;color:var(--text-muted);margin:0.3rem 0 0;"><i class="fa-solid fa-info-circle"></i> Định dạng: .pdf</p>
                 </div>
 
-                <!-- Audio Upload -->
-                <div class="upload-zone" id="zone-audio" style="border:2px dashed var(--glass-border);border-radius:16px;padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg-main);position:relative;">
-                  <input type="file" id="file-audio" accept=".mp3,.wav,.ogg,.m4a,.flac" style="display:none;" />
-                  <div style="width:48px;height:48px;border-radius:12px;background:rgba(236,72,153,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;font-size:1.2rem;color:var(--color-secondary);">
-                    <i class="fa-solid fa-headphones"></i>
-                  </div>
-                  <p id="audio-label" style="font-size:0.8rem;font-weight:600;margin:0 0 0.25rem;color:var(--text-main);">Tệp Audio</p>
-                  <p style="font-size:0.68rem;color:var(--text-muted);margin:0;">Kéo thả hoặc nhấn để chọn</p>
-                  <p style="font-size:0.6rem;color:var(--text-muted);margin:0.3rem 0 0;"><i class="fa-solid fa-info-circle"></i> .mp3, .wav, .ogg, .m4a</p>
-                </div>
+                <!-- Audio Upload placeholder (Removed from grid, moved to Chapters section below) -->
 
                 <!-- Copyright ZIP Upload -->
                 <div class="upload-zone" id="zone-copyright" style="border:2px dashed var(--glass-border);border-radius:16px;padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg-main);position:relative;">
@@ -214,6 +206,20 @@ export class AuthorPage {
                   <p style="font-size:0.6rem;color:var(--text-muted);margin:0.3rem 0 0;"><i class="fa-solid fa-info-circle"></i> .zip, .rar, .7z</p>
                 </div>
               </div>
+            </div>
+
+            <!-- Chapters Section -->
+            <div style="margin-bottom:2rem;">
+              <h3 style="font-size:1rem;margin:0 0 1.25rem;color:var(--color-secondary);display:flex;align-items:center;gap:8px;">
+                <i class="fa-solid fa-layer-group" style="font-size:0.9rem;"></i>
+                Phân chương Audio <span style="font-size:0.75rem;color:var(--text-muted);font-weight:normal;">(Tải lên file định dạng .mp3, .wav...)</span>
+              </h3>
+              <div id="chapters-container" style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1rem;">
+                <!-- Chapters will be added here dynamically -->
+              </div>
+              <button type="button" id="add-chapter-btn" class="btn" style="background:var(--bg-main);border:1px dashed var(--color-primary);color:var(--color-primary);width:100%;padding:0.75rem;border-radius:12px;">
+                <i class="fa-solid fa-plus"></i> Thêm chương mới
+              </button>
             </div>
 
             <!-- eBook URL (optional fallback) -->
@@ -455,8 +461,33 @@ export class AuthorPage {
 
     // File upload zones
     this._setupUploadZone('zone-pdf', 'file-pdf', 'pdf-label');
-    this._setupUploadZone('zone-audio', 'file-audio', 'audio-label');
     this._setupUploadZone('zone-copyright', 'file-copyright', 'copyright-label');
+
+    // Chapter logic
+    const chaptersContainer = document.getElementById('chapters-container');
+    const addChapterBtn = document.getElementById('add-chapter-btn');
+    let chapCounter = 0;
+    const addChapter = () => {
+      chapCounter++;
+      const n = chapCounter;
+      const div = document.createElement('div');
+      div.className = 'chapter-item-form';
+      div.style = 'display:flex;gap:1rem;align-items:center;background:var(--bg-panel);padding:1rem;border-radius:12px;border:1px solid var(--glass-border);';
+      div.innerHTML =
+        '<div style="width:36px;height:36px;border-radius:8px;background:var(--bg-main);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-muted);flex-shrink:0;">' + n + '</div>' +
+        '<div style="flex:1;display:flex;flex-direction:column;gap:0.5rem;">' +
+          '<input type="text" class="chapter-name" placeholder="Tên chương ' + n + '" style="width:100%;padding:0.5rem 0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);font-size:0.85rem;outline:none;" />' +
+          '<div style="display:grid;grid-template-columns:2fr 1fr;gap:0.75rem;">' +
+            '<input type="url" class="chapter-audio-url" placeholder="URL Audio chương này (https://...)" style="padding:0.45rem 0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);font-size:0.8rem;outline:none;" />' +
+            '<input type="number" class="chapter-duration" placeholder="Thời lượng (giây)" min="0" style="padding:0.45rem 0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);font-size:0.8rem;outline:none;" />' +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="btn-icon remove-chap" style="color:#ff4757;width:32px;height:32px;" title="Xóa chương"><i class="fa-solid fa-trash"></i></button>';
+      div.querySelector('.remove-chap').onclick = () => div.remove();
+      chaptersContainer.appendChild(div);
+    };
+    addChapter(); // Add first chap by default
+    addChapterBtn.onclick = addChapter;
 
     // Form submission
     document.getElementById('publish-book-form')?.addEventListener('submit', (e) => {
@@ -511,8 +542,26 @@ export class AuthorPage {
     submitBtn.disabled = true;
 
       const pdfFile = document.getElementById('file-pdf')?.files?.[0];
-      const audioFile = document.getElementById('file-audio')?.files?.[0];
       const copyrightFile = document.getElementById('file-copyright')?.files?.[0];
+
+      const chapters = [];
+      document.querySelectorAll('.chapter-item-form').forEach((el, index) => {
+        const nameNode = el.querySelector('.chapter-name');
+        const durationNode = el.querySelector('.chapter-duration');
+        const urlNode = el.querySelector('.chapter-audio-url');
+
+        const name = nameNode ? nameNode.value.trim() : '';
+        const duration = durationNode ? parseInt(durationNode.value) || 0 : 0;
+        const audiobookUrl = urlNode ? urlNode.value.trim() : '';
+
+        if (name || audiobookUrl) {
+          chapters.push({
+            name: name || ('Chương ' + (index + 1)),
+            duration: duration,
+            audiobookUrl: audiobookUrl
+          });
+        }
+      });
 
       const payload = {
         name: document.getElementById('pub-name')?.value?.trim(),
@@ -527,9 +576,9 @@ export class AuthorPage {
         ebookFileUrl: document.getElementById('pub-ebook-url')?.value?.trim() || (pdfFile ? URL.createObjectURL(pdfFile) : ''),
         authorId: currentUser.authorId,
         submittedByUserId: currentUser.id,
-        // Using Blob URLs for SPA mock to make files accessible before reload
-        audioFileUrl: audioFile ? URL.createObjectURL(audioFile) : '',
+        audioFileUrl: '',
         copyrightFileUrl: copyrightFile ? URL.createObjectURL(copyrightFile) : '',
+        chapters: chapters
       };
 
     if (!payload.name) {
@@ -704,12 +753,7 @@ export class AuthorPage {
                   <p id="edit-pdf-label" style="font-size:0.8rem;font-weight:600;margin:0 0 0.25rem;color:var(--text-main);">${book.ebookFileUrl ? '<i class="fa-solid fa-check-circle" style="color:#2ed573;"></i> Đã có tệp' : 'Tệp PDF sách'}</p>
                   <p style="font-size:0.68rem;color:var(--text-muted);margin:0;">Nhấn để thay thế</p>
                 </div>
-                <div class="upload-zone ${book.audioFileUrl ? 'has-file' : ''}" id="edit-zone-audio" style="border:2px dashed var(--glass-border);border-radius:16px;padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg-main);">
-                  <input type="file" id="edit-file-audio" accept=".mp3,.wav,.ogg,.m4a,.flac" style="display:none;" />
-                  <div class="upload-icon" style="width:48px;height:48px;border-radius:12px;background:rgba(236,72,153,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;font-size:1.2rem;color:var(--color-secondary);"><i class="fa-solid fa-headphones"></i></div>
-                  <p id="edit-audio-label" style="font-size:0.8rem;font-weight:600;margin:0 0 0.25rem;color:var(--text-main);">${book.audioFileUrl ? '<i class="fa-solid fa-check-circle" style="color:#2ed573;"></i> Đã có tệp' : 'Tệp Audio'}</p>
-                  <p style="font-size:0.68rem;color:var(--text-muted);margin:0;">Nhấn để thay thế</p>
-                </div>
+                <!-- Audio Editor removed -->
                 <div class="upload-zone ${book.copyrightFileUrl ? 'has-file' : ''}" id="edit-zone-copyright" style="border:2px dashed var(--glass-border);border-radius:16px;padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg-main);">
                   <input type="file" id="edit-file-copyright" accept=".zip,.rar,.7z" style="display:none;" />
                   <div class="upload-icon" style="width:48px;height:48px;border-radius:12px;background:rgba(255,165,0,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem;font-size:1.2rem;color:#ffa500;"><i class="fa-solid fa-file-zipper"></i></div>
@@ -717,6 +761,20 @@ export class AuthorPage {
                   <p style="font-size:0.68rem;color:var(--text-muted);margin:0;">Nhấn để thay thế</p>
                 </div>
               </div>
+            </div>
+
+            <!-- Edit Chapters -->
+            <div style="margin-bottom:2rem;">
+              <h3 style="font-size:1rem;margin:0 0 1.25rem;color:var(--color-secondary);display:flex;align-items:center;gap:8px;">
+                <i class="fa-solid fa-layer-group" style="font-size:0.9rem;"></i>
+                Chỉnh sửa chương
+              </h3>
+              <div id="edit-chapters-container" style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1rem;">
+                <!-- Will be populated dynamically -->
+              </div>
+              <button type="button" id="edit-add-chapter-btn" class="btn" style="background:var(--bg-main);border:1px dashed var(--color-primary);color:var(--color-primary);width:100%;padding:0.75rem;border-radius:12px;">
+                <i class="fa-solid fa-plus"></i> Thêm chương mới
+              </button>
             </div>
 
             <div style="margin-bottom:2rem;">
@@ -837,8 +895,45 @@ export class AuthorPage {
 
     // File upload zones
     this._setupUploadZone('edit-zone-pdf', 'edit-file-pdf', 'edit-pdf-label');
-    this._setupUploadZone('edit-zone-audio', 'edit-file-audio', 'edit-audio-label');
     this._setupUploadZone('edit-zone-copyright', 'edit-file-copyright', 'edit-copyright-label');
+
+    // Chapters edit logic
+    const chaptersContainer = document.getElementById('edit-chapters-container');
+    const addChapterBtn = document.getElementById('edit-add-chapter-btn');
+    
+    // Fetch chapters for this book
+    const existingChapters = (this.allData?.audioChapter || []).filter(c => c.bookId === book.id).sort((a,b) => a.chapterNumber - b.chapterNumber);
+    let chapCounter = 0;
+
+    const addChapter = (chapInfo = null) => {
+      chapCounter++;
+      const n = chapCounter;
+      const defaultName = chapInfo ? chapInfo.name : ('Chương ' + n);
+      const hasAudio = chapInfo && chapInfo.audiobookUrl;
+      const div = document.createElement('div');
+      div.className = 'chapter-item-form';
+      div.style = 'display:flex;gap:1rem;align-items:center;background:var(--bg-panel);padding:1rem;border-radius:12px;border:1px solid var(--glass-border);';
+      div.innerHTML =
+        '<div style="width:36px;height:36px;border-radius:8px;background:var(--bg-main);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-muted);flex-shrink:0;">' + n + '</div>' +
+        '<div style="flex:1;display:flex;flex-direction:column;gap:0.5rem;">' +
+          '<input type="text" class="chapter-name" placeholder="Tên chương" value="' + this._escapeAttr(defaultName) + '" style="width:100%;padding:0.5rem 0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);font-size:0.85rem;outline:none;" />' +
+          '<div style="display:grid;grid-template-columns:2fr 1fr;gap:0.75rem;">' +
+            '<input type="url" class="chapter-audio-url" placeholder="URL Audio" value="' + (chapInfo && chapInfo.audiobookUrl ? this._escapeAttr(chapInfo.audiobookUrl) : '') + '" style="padding:0.45rem 0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);font-size:0.8rem;outline:none;" />' +
+            '<input type="number" class="chapter-duration" placeholder="Giây" min="0" value="' + (chapInfo ? chapInfo.duration || 0 : 0) + '" style="padding:0.45rem 0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);font-size:0.8rem;outline:none;" />' +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="btn-icon remove-chap" style="color:#ff4757;width:32px;height:32px;" title="Xóa chương"><i class="fa-solid fa-trash"></i></button>';
+      div.querySelector('.remove-chap').onclick = () => div.remove();
+      chaptersContainer.appendChild(div);
+    };
+
+    if (existingChapters.length > 0) {
+      existingChapters.forEach(c => addChapter(c));
+    } else {
+      addChapter();
+    }
+
+    addChapterBtn.onclick = () => addChapter();
 
     // Form submission
     document.getElementById('edit-book-form')?.addEventListener('submit', (e) => {
@@ -867,8 +962,26 @@ export class AuthorPage {
     submitBtn.disabled = true;
 
       const pdfFile = document.getElementById('edit-file-pdf')?.files?.[0];
-      const audioFile = document.getElementById('edit-file-audio')?.files?.[0];
       const copyrightFile = document.getElementById('edit-file-copyright')?.files?.[0];
+
+      const chapters = [];
+      document.querySelectorAll('.chapter-item-form').forEach((el, index) => {
+        const nameNode = el.querySelector('.chapter-name');
+        const durationNode = el.querySelector('.chapter-duration');
+        const urlNode = el.querySelector('.chapter-audio-url');
+
+        const name = nameNode ? nameNode.value.trim() : '';
+        const duration = durationNode ? parseInt(durationNode.value) || 0 : 0;
+        const audiobookUrl = urlNode ? urlNode.value.trim() : '';
+
+        if (name || audiobookUrl) {
+          chapters.push({
+            name: name || ('Chương ' + (index + 1)),
+            duration: duration,
+            audiobookUrl: audiobookUrl
+          });
+        }
+      });
 
       const payload = {
         name: document.getElementById('edit-name')?.value?.trim(),
@@ -881,8 +994,9 @@ export class AuthorPage {
         PublishingHouseId: document.getElementById('edit-publisher')?.value || null,
         thumbnailUrl: document.getElementById('edit-thumb')?.value?.trim() || '',
         ebookFileUrl: document.getElementById('edit-ebook-url')?.value?.trim() || (pdfFile ? URL.createObjectURL(pdfFile) : book.ebookFileUrl || ''),
-        audioFileUrl: audioFile ? URL.createObjectURL(audioFile) : book.audioFileUrl || '',
+        audioFileUrl: '',
         copyrightFileUrl: copyrightFile ? URL.createObjectURL(copyrightFile) : book.copyrightFileUrl || '',
+        chapters: chapters
       };
 
 

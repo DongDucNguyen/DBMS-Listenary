@@ -57,7 +57,6 @@ export class BookDetailPage {
     this.users = data.user || [];
 
     // Lấy trạng thái yêu thích từ MockDbService (bao gồm DB tĩnh)
-    const user = AuthService.getUser();
     if (user) {
       const userFavs = (data.userFavorites || []).filter(f => f.userId === user.id).map(f => f.bookId);
       this.isFavorite = MockDbService.isFavorite(user.id, this.bookId, userFavs);

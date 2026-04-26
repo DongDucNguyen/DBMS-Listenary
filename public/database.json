@@ -1571,6 +1571,31 @@
       "submittedByUserId": 4,
       "submittedAt": "2026-04-26T10:44:52.681Z",
       "categoryId": null
+    },
+    {
+      "id": 54,
+      "name": "VPC",
+      "thumbnailUrl": "",
+      "description": "VPC",
+      "country": "",
+      "language": "VN",
+      "pageNumber": 0,
+      "releaseDate": null,
+      "ebookFileUrl": "blob:http://localhost:5173/9bab2e32-2792-4ac0-bd32-916f88aa81ac",
+      "weeklyViewCount": 0,
+      "lastWeekReset": null,
+      "PublishingHouseId": null,
+      "createdAt": "2026-04-26T12:12:00.603Z",
+      "updatedAt": "2026-04-26T12:13:23.599Z",
+      "authorId": 1,
+      "viewCount": 2,
+      "approvalStatus": "PENDING",
+      "audioFileUrl": "",
+      "copyrightFileUrl": "",
+      "submittedByUserId": 4,
+      "submittedAt": "2026-04-26T12:12:00.603Z",
+      "categoryId": null,
+      "editedAt": "2026-04-26T12:13:23.599Z"
     }
   ],
   "audioChapter": [
@@ -2805,6 +2830,22 @@
       "bookId": 50,
       "createdAt": "2025-11-09 06:15:00",
       "updatedAt": "2025-11-09 06:16:00"
+    },
+    {
+      "id": 116,
+      "bookId": 54,
+      "chapterNumber": 1,
+      "name": "Chương 1",
+      "duration": 15000,
+      "audiobookUrl": "https://crimson-voice-0636.dongducnguyen05.workers.dev/?fileId=10Fyw5ibjmyNe1u3BDu2bYpYBJqWGFtMu&version=fix_lan_cuoi"
+    },
+    {
+      "id": 117,
+      "bookId": 54,
+      "chapterNumber": 2,
+      "name": "Chương 2",
+      "duration": 15000,
+      "audiobookUrl": "https://l.facebook.com/l.php?u=https%3A%2F%2Fcrimson-voice-0636.dongducnguyen05.workers.dev%2F%3FfileId%3D1TjQ8Y2zXsxmCLoYtq_gOr9SDI4crqGr2%26version%3Dfix_lan_cuoi%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExbE03S3ZDNExZUk00elo1b3NydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR6K56LoNlQyzClR1_ameqXzeepODzqOOoodtgOIfjeg0QJVBzDhwivPSvok8Q_aem_kSWUKstzg5c3zr6yslhbTg&h=AT3XBAcmohCSz-z8qh4cxm08zyRb2S2mFJrgdBMxzJUWv9o6Awct3YHeNEAon6TOogNdV7szp7bMBX9EzAm_dTjxN_I2svM23rDGnptp5w2WJ63DsBLH09_0OPCvzr_BU4mNoQ"
     }
   ],
   "authorsOfBooks": [
@@ -3014,6 +3055,10 @@
     },
     {
       "BookId": 53,
+      "AuthorId": 1
+    },
+    {
+      "BookId": 54,
       "AuthorId": 1
     }
   ],
@@ -3243,6 +3288,15 @@
     }
   ],
   "listeningAudioBook": [
+    {
+      "id": 5,
+      "userId": 1,
+      "bookId": 54,
+      "audioTimeline": 0,
+      "isFinished": false,
+      "lastListenedAt": "2026-04-26T12:13:34.626Z",
+      "audioChapterId": 1
+    },
     {
       "id": 4,
       "userId": 1,
