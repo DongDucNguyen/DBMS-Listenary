@@ -102,7 +102,7 @@ export class UserPage {
       return `<p style="color:var(--text-muted);text-align:center;padding:2rem;">Bạn chưa nghe cuốn sách nào. <a href="#explore" style="color:var(--color-primary);">Khám phá ngay!</a></p>`;
     }
     return history.map(h => {
-      const book = this.books.find(b => b.id === h.bookId);
+      const book = this.books.find(b => b.id === h.bookId && (!b.approvalStatus || b.approvalStatus === 'APPROVED'));
       if (!book) return '';
       const date = h.lastListened ? new Date(h.lastListened).toLocaleDateString('vi-VN') : 'N/A';
       const prog = h.progress || 0;
@@ -196,7 +196,7 @@ export class UserPage {
           <p>Bạn chưa yêu thích cuốn sách nào. <a href="#explore" style="color:var(--color-primary);">Khám phá ngay!</a></p>
         </div>`;
     }
-    const favBooks = favIds.map(id => this.books.find(b => b.id === id)).filter(Boolean);
+    const favBooks = favIds.map(id => this.books.find(b => b.id === id && (!b.approvalStatus || b.approvalStatus === 'APPROVED'))).filter(Boolean);
     return `
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1rem;">
         ${favBooks.map(book => `

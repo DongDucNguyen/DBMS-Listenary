@@ -258,6 +258,12 @@ export class AdminPage {
                         </div>
                         <!-- Action buttons -->
                         <div style="display:flex;gap:0.5rem;">
+                          <a href="#book?id=${book.id}" class="btn view-book-btn"
+                            style="background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.3);color:var(--color-primary);padding:6px 16px;border-radius:10px;font-size:0.78rem;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:5px;transition:all 0.2s;font-family:var(--font-sans);"
+                            onmouseover="this.style.background='var(--color-primary)';this.style.color='#fff'"
+                            onmouseout="this.style.background='rgba(124,58,237,0.12)';this.style.color='var(--color-primary)'">
+                            <i class="fa-solid fa-eye"></i> Xem chi tiết
+                          </a>
                           <button class="btn approve-book-btn" 
                             data-bookid="${book.id}" data-bookname="${book.name.replace(/"/g, '&quot;')}"
                             style="background:rgba(46,213,115,0.15);border:1px solid rgba(46,213,115,0.35);color:#2ed573;padding:6px 16px;border-radius:10px;font-size:0.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.2s;font-family:var(--font-sans);"

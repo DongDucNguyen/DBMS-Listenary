@@ -28,6 +28,19 @@ export class BookDetailPage {
     this.book = data.books.find(b => b.id === this.bookId);
     if (!this.book) { this.isLoading = false; this._reRender(); return; }
 
+    const user = AuthService.getUser();
+    const isApproved = !this.book.approvalStatus || this.book.approvalStatus === 'APPROVED';
+    const isOwner = user && user.roleId === 3 && this.book.authorId === user.authorId;
+    const isAdmin = user && user.roleId === 1;
+
+    if (!isApproved && !isOwner && !isAdmin) {
+      // Access denied for normal users viewing unapproved books
+      this.book = null;
+      this.isLoading = false;
+      this._reRender();
+      return;
+    }
+
     const rel = (data.authorsOfBooks || []).find(r => r.BookId === this.bookId);
     this.author = rel ? (data.author || []).find(a => a.id === rel.AuthorId) : null;
 
@@ -56,7 +69,7 @@ export class BookDetailPage {
     const authorBookIds = (data.authorsOfBooks || [])
       .filter(r => r.AuthorId === rel?.AuthorId && r.BookId !== this.bookId)
       .map(r => r.BookId);
-    this.moreBooks = data.books.filter(b => authorBookIds.includes(b.id)).slice(0, 4);
+    this.moreBooks = data.books.filter(b => authorBookIds.includes(b.id) && (!b.approvalStatus || b.approvalStatus === 'APPROVED')).slice(0, 4);
 
     this.isLoading = false;
     this._reRender();

@@ -1521,6 +1521,56 @@
       "authorId": 43,
       "viewCount": 8700,
       "approvalStatus": "APPROVED"
+    },
+    {
+      "id": 52,
+      "name": "Tội",
+      "thumbnailUrl": "",
+      "description": "hay",
+      "country": "",
+      "language": "VN",
+      "pageNumber": 0,
+      "releaseDate": null,
+      "ebookFileUrl": "blob:http://localhost:5174/f038e2c2-c651-470b-abd2-e7bd4a1719a6",
+      "weeklyViewCount": 0,
+      "lastWeekReset": null,
+      "PublishingHouseId": null,
+      "createdAt": "2026-04-26T10:29:04.021Z",
+      "updatedAt": "2026-04-26T10:45:10.310Z",
+      "authorId": 1,
+      "viewCount": 0,
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": "",
+      "submittedByUserId": 4,
+      "submittedAt": "2026-04-26T10:29:04.021Z",
+      "categoryId": null,
+      "editedAt": "2026-04-26T10:42:09.593Z",
+      "approvedAt": "2026-04-26T10:45:10.310Z"
+    },
+    {
+      "id": 53,
+      "name": "woww",
+      "thumbnailUrl": "",
+      "description": "he",
+      "country": "",
+      "language": "VN",
+      "pageNumber": 0,
+      "releaseDate": null,
+      "ebookFileUrl": "blob:http://localhost:5174/3c58817c-e91d-44aa-a06b-fac99b0b5760",
+      "weeklyViewCount": 0,
+      "lastWeekReset": null,
+      "PublishingHouseId": null,
+      "createdAt": "2026-04-26T10:44:52.681Z",
+      "updatedAt": "2026-04-26T10:44:52.681Z",
+      "authorId": 1,
+      "viewCount": 0,
+      "approvalStatus": "PENDING",
+      "audioFileUrl": "blob:http://localhost:5174/1747dd04-8c56-4c3d-b766-b0898c45052f",
+      "copyrightFileUrl": "",
+      "submittedByUserId": 4,
+      "submittedAt": "2026-04-26T10:44:52.681Z",
+      "categoryId": null
     }
   ],
   "audioChapter": [
@@ -2957,6 +3007,14 @@
     {
       "AuthorId": 43,
       "BookId": 50
+    },
+    {
+      "BookId": 52,
+      "AuthorId": 1
+    },
+    {
+      "BookId": 53,
+      "AuthorId": 1
     }
   ],
   "category": [

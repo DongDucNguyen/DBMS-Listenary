@@ -71,6 +71,15 @@ export class AudioPlayerPage {
       this.book = data.books.find(b => b.id === this.bookId);
       if (!this.book) throw new Error('Not found');
 
+      const user = AuthService.getUser();
+      const isApproved = !this.book.approvalStatus || this.book.approvalStatus === 'APPROVED';
+      const isOwner = user && user.roleId === 3 && this.book.authorId === user.authorId;
+      const isAdmin = user && user.roleId === 1;
+
+      if (!isApproved && !isOwner && !isAdmin) {
+        throw new Error('Access denied: Book is pending approval.');
+      }
+
       const rel = (data.authorsOfBooks || []).find(r => r.BookId === this.bookId);
       this.author = rel ? (data.author || []).find(a => a.id === rel.AuthorId) : null;
 

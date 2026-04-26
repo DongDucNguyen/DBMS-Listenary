@@ -510,23 +510,27 @@ export class AuthorPage {
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
     submitBtn.disabled = true;
 
-    const payload = {
-      name: document.getElementById('pub-name')?.value?.trim(),
-      description: document.getElementById('pub-desc')?.value?.trim(),
-      country: document.getElementById('pub-country')?.value?.trim() || '',
-      language: document.getElementById('pub-language')?.value || 'VN',
-      pageNumber: document.getElementById('pub-pages')?.value || 0,
-      releaseDate: document.getElementById('pub-year')?.value ? parseInt(document.getElementById('pub-year').value) : null,
-      categoryId: document.getElementById('pub-category')?.value || null,
-      PublishingHouseId: document.getElementById('pub-publisher')?.value || null,
-      thumbnailUrl: document.getElementById('pub-thumb')?.value?.trim() || '',
-      ebookFileUrl: document.getElementById('pub-ebook-url')?.value?.trim() || '',
-      authorId: currentUser.authorId,
-      submittedByUserId: currentUser.id,
-      // Files would be uploaded to a real server; here we store filenames as references
-      audioFileUrl: document.getElementById('file-audio')?.files?.[0]?.name || '',
-      copyrightFileUrl: document.getElementById('file-copyright')?.files?.[0]?.name || '',
-    };
+      const pdfFile = document.getElementById('file-pdf')?.files?.[0];
+      const audioFile = document.getElementById('file-audio')?.files?.[0];
+      const copyrightFile = document.getElementById('file-copyright')?.files?.[0];
+
+      const payload = {
+        name: document.getElementById('pub-name')?.value?.trim(),
+        description: document.getElementById('pub-desc')?.value?.trim(),
+        country: document.getElementById('pub-country')?.value?.trim() || '',
+        language: document.getElementById('pub-language')?.value || 'VN',
+        pageNumber: document.getElementById('pub-pages')?.value || 0,
+        releaseDate: document.getElementById('pub-year')?.value ? parseInt(document.getElementById('pub-year').value) : null,
+        categoryId: document.getElementById('pub-category')?.value || null,
+        PublishingHouseId: document.getElementById('pub-publisher')?.value || null,
+        thumbnailUrl: document.getElementById('pub-thumb')?.value?.trim() || '',
+        ebookFileUrl: document.getElementById('pub-ebook-url')?.value?.trim() || (pdfFile ? URL.createObjectURL(pdfFile) : ''),
+        authorId: currentUser.authorId,
+        submittedByUserId: currentUser.id,
+        // Using Blob URLs for SPA mock to make files accessible before reload
+        audioFileUrl: audioFile ? URL.createObjectURL(audioFile) : '',
+        copyrightFileUrl: copyrightFile ? URL.createObjectURL(copyrightFile) : '',
+      };
 
     if (!payload.name) {
       alert('Vui lòng nhập tên sách!');
@@ -854,30 +858,34 @@ export class AuthorPage {
   async _submitEdit() {
     const bookId = parseInt(document.getElementById('edit-book-id')?.value);
     if (!bookId) return;
+    const book = this.authorBooks.find(b => b.id === bookId);
+    if (!book) return;
 
     const submitBtn = document.getElementById('submit-edit');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
     submitBtn.disabled = true;
 
-    const payload = {
-      name: document.getElementById('edit-name')?.value?.trim(),
-      description: document.getElementById('edit-desc')?.value?.trim(),
-      country: document.getElementById('edit-country')?.value?.trim() || '',
-      language: document.getElementById('edit-language')?.value || 'VN',
-      pageNumber: document.getElementById('edit-pages')?.value || 0,
-      releaseDate: document.getElementById('edit-year')?.value ? parseInt(document.getElementById('edit-year').value) : null,
-      categoryId: document.getElementById('edit-category')?.value || null,
-      PublishingHouseId: document.getElementById('edit-publisher')?.value || null,
-      thumbnailUrl: document.getElementById('edit-thumb')?.value?.trim() || '',
-      ebookFileUrl: document.getElementById('edit-ebook-url')?.value?.trim() || '',
-    };
+      const pdfFile = document.getElementById('edit-file-pdf')?.files?.[0];
+      const audioFile = document.getElementById('edit-file-audio')?.files?.[0];
+      const copyrightFile = document.getElementById('edit-file-copyright')?.files?.[0];
 
-    // Handle new file uploads
-    const newAudio = document.getElementById('edit-file-audio')?.files?.[0];
-    const newCopyright = document.getElementById('edit-file-copyright')?.files?.[0];
-    if (newAudio) payload.audioFileUrl = newAudio.name;
-    if (newCopyright) payload.copyrightFileUrl = newCopyright.name;
+      const payload = {
+        name: document.getElementById('edit-name')?.value?.trim(),
+        description: document.getElementById('edit-desc')?.value?.trim(),
+        country: document.getElementById('edit-country')?.value?.trim() || '',
+        language: document.getElementById('edit-language')?.value || 'VN',
+        pageNumber: document.getElementById('edit-pages')?.value || 0,
+        releaseDate: document.getElementById('edit-year')?.value ? parseInt(document.getElementById('edit-year').value) : null,
+        categoryId: document.getElementById('edit-category')?.value || null,
+        PublishingHouseId: document.getElementById('edit-publisher')?.value || null,
+        thumbnailUrl: document.getElementById('edit-thumb')?.value?.trim() || '',
+        ebookFileUrl: document.getElementById('edit-ebook-url')?.value?.trim() || (pdfFile ? URL.createObjectURL(pdfFile) : book.ebookFileUrl || ''),
+        audioFileUrl: audioFile ? URL.createObjectURL(audioFile) : book.audioFileUrl || '',
+        copyrightFileUrl: copyrightFile ? URL.createObjectURL(copyrightFile) : book.copyrightFileUrl || '',
+      };
+
+
 
     if (!payload.name) {
       alert('Vui lòng nhập tên sách!');
