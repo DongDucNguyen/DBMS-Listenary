@@ -102,7 +102,7 @@ export class UserPage {
       return `<p style="color:var(--text-muted);text-align:center;padding:2rem;">Bạn chưa nghe cuốn sách nào. <a href="#explore" style="color:var(--color-primary);">Khám phá ngay!</a></p>`;
     }
     return history.map(h => {
-      const book = this.books.find(b => b.id === h.bookId && (!b.approvalStatus || b.approvalStatus === 'APPROVED'));
+      const book = this.books.find(b => b.id === h.bookId && (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden);
       if (!book) return '';
       const date = h.lastListened ? new Date(h.lastListened).toLocaleDateString('vi-VN') : 'N/A';
       const prog = h.progress || 0;
@@ -196,7 +196,7 @@ export class UserPage {
           <p>Bạn chưa yêu thích cuốn sách nào. <a href="#explore" style="color:var(--color-primary);">Khám phá ngay!</a></p>
         </div>`;
     }
-    const favBooks = favIds.map(id => this.books.find(b => b.id === id && (!b.approvalStatus || b.approvalStatus === 'APPROVED'))).filter(Boolean);
+    const favBooks = favIds.map(id => this.books.find(b => b.id === id && (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden)).filter(Boolean);
     return `
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1rem;">
         ${favBooks.map(book => `
@@ -366,8 +366,14 @@ export class UserPage {
               <button id="edit-profile-btn" class="btn btn-primary" style="width:100%;margin-top:1rem;font-size:0.9rem;">
                 <i class="fa-solid fa-pen"></i> Chỉnh sửa hồ sơ
               </button>
+              <button id="change-password-btn" onclick="window._openChangePasswordModal()" class="btn" style="width:100%;margin-top:0.5rem;font-size:0.9rem;background:var(--bg-main);border:1px solid var(--glass-border);color:var(--text-main);">
+                <i class="fa-solid fa-key"></i> Đổi mật khẩu
+              </button>
               <button id="profile-logout-btn" class="btn" style="width:100%;margin-top:0.5rem;font-size:0.9rem;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);color:#ff4757;">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+              </button>
+              <button id="delete-account-btn" onclick="window._openDeleteAccountModal()" class="btn" style="width:100%;margin-top:1rem;font-size:0.85rem;background:transparent;border:1px dashed rgba(255,71,87,0.4);color:#ff4757;opacity:0.8;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                <i class="fa-solid fa-user-xmark"></i> Xóa tài khoản
               </button>
             </div>
           </div>
@@ -422,6 +428,60 @@ export class UserPage {
               ${this._buildComments()}
             </div>
           </div>
+        </div>
+      </div>
+    `;
+
+    let modalsWrapper = document.getElementById('user-modals-wrapper');
+    if (!modalsWrapper) {
+      modalsWrapper = document.createElement('div');
+      modalsWrapper.id = 'user-modals-wrapper';
+      document.body.appendChild(modalsWrapper);
+    }
+    
+    modalsWrapper.innerHTML = `
+      <!-- Password Modal -->
+      <div id="change-password-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(5px);z-index:99999;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;">
+        <div style="background:var(--bg-panel-solid);border:1px solid var(--glass-border);border-radius:16px;width:90%;max-width:400px;padding:2rem;transform:scale(0.95);transition:transform 0.2s;">
+          <h3 style="margin:0 0 1.5rem;font-size:1.25rem;"><i class="fa-solid fa-key" style="color:var(--color-primary);"></i> Đổi mật khẩu</h3>
+          <form id="change-password-form" style="display:flex;flex-direction:column;gap:1.25rem;">
+            <label style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.85rem;color:var(--text-muted);font-weight:600;">
+              Mật khẩu cũ (*)
+              <input type="password" id="old-password-input" required style="padding:0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);outline:none;" />
+            </label>
+            <label style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.85rem;color:var(--text-muted);font-weight:600;">
+              Mật khẩu mới (*)
+              <input type="password" id="new-password-input" required style="padding:0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);outline:none;" />
+            </label>
+            <label style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.85rem;color:var(--text-muted);font-weight:600;">
+              Xác nhận mật khẩu mới (*)
+              <input type="password" id="confirm-password-input" required style="padding:0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);outline:none;" />
+            </label>
+            <div id="password-error" style="color:#ff4757;font-size:0.85rem;display:none;"></div>
+            <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+              <button type="button" onclick="document.getElementById('change-password-modal').style.display='none'" class="btn" style="flex:1;background:var(--bg-main);border:1px solid var(--glass-border);color:var(--text-main);">Hủy</button>
+              <button type="submit" id="btn-submit-password" class="btn btn-primary" style="flex:1;">Lưu</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Delete Account Modal -->
+      <div id="delete-account-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(5px);z-index:99999;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;">
+        <div style="background:var(--bg-panel-solid);border:1px solid #ff4757;border-radius:16px;width:90%;max-width:400px;padding:2rem;transform:scale(0.95);transition:transform 0.2s;">
+          <h3 style="margin:0 0 1rem;font-size:1.25rem;color:#ff4757;"><i class="fa-solid fa-triangle-exclamation"></i> Xóa tài khoản vĩnh viễn</h3>
+          <p style="color:var(--text-muted);font-size:0.85rem;line-height:1.5;margin-bottom:1.5rem;">Hành động này không thể hoàn tác. Mọi lịch sử nghe, đánh giá và thông tin cá nhân của bạn sẽ bị xóa ngay lập tức. Hãy nhập mật khẩu để xác nhận.</p>
+          <form id="delete-account-form" style="display:flex;flex-direction:column;gap:1.25rem;">
+            <label style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.85rem;color:var(--text-muted);font-weight:600;">
+              Mật khẩu hiện tại (*)
+              <input type="password" id="delete-password-input" required style="padding:0.75rem;border-radius:8px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);outline:none;" />
+            </label>
+            <div id="delete-error" style="color:#ff4757;font-size:0.85rem;display:none;"></div>
+            <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+              <button type="button" onclick="document.getElementById('delete-account-modal').style.display='none'" class="btn" style="flex:1;background:var(--bg-main);border:1px solid var(--glass-border);color:var(--text-main);">Hủy</button>
+              <button type="submit" id="btn-submit-delete" class="btn" style="flex:1;background:#ff4757;color:#fff;">Xác nhận xóa</button>
+            </div>
+          </form>
         </div>
       </div>
     `;
@@ -638,6 +698,113 @@ export class UserPage {
           setTimeout(() => toast.remove(), 3000);
         }
       );
+    });
+
+    // --- Change Password ---
+    window._openChangePasswordModal = () => {
+      const modal = document.getElementById('change-password-modal');
+      const form = document.getElementById('change-password-form');
+      form.reset();
+      document.getElementById('password-error').style.display = 'none';
+      if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+          modal.style.opacity = '1';
+          modal.firstElementChild.style.transform = 'scale(1)';
+        }, 10);
+      }
+    };
+
+    document.getElementById('change-password-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('password-error');
+      const oldPass = document.getElementById('old-password-input').value;
+      const newPass = document.getElementById('new-password-input').value;
+      const confPass = document.getElementById('confirm-password-input').value;
+
+      errBox.style.display = 'none';
+      if (newPass !== confPass) {
+        errBox.textContent = 'Mật khẩu xác nhận không khớp.';
+        errBox.style.display = 'block';
+        return;
+      }
+
+      const btn = document.getElementById('btn-submit-password');
+      const ogHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/users/update-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: this.userData.id, oldPassword: oldPass, newPassword: newPass })
+        });
+        const d = await res.json();
+        if (d.success) {
+          alert('Đổi mật khẩu thành công! Vui lòng sử dụng mật khẩu mới trong lần đăng nhập tới.');
+          document.getElementById('change-password-modal').style.display = 'none';
+          this.reRender();
+        } else {
+          errBox.textContent = d.error || 'Lỗi không xác định.';
+          errBox.style.display = 'block';
+        }
+      } catch(err) {
+        errBox.textContent = 'Lỗi kết nối mạng.';
+        errBox.style.display = 'block';
+      } finally {
+        btn.innerHTML = ogHtml;
+        btn.disabled = false;
+      }
+    });
+
+    // --- Delete Account ---
+    window._openDeleteAccountModal = () => {
+      const modal = document.getElementById('delete-account-modal');
+      const form = document.getElementById('delete-account-form');
+      form.reset();
+      document.getElementById('delete-error').style.display = 'none';
+      if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+          modal.style.opacity = '1';
+          modal.firstElementChild.style.transform = 'scale(1)';
+        }, 10);
+      }
+    };
+
+    document.getElementById('delete-account-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('delete-error');
+      const pass = document.getElementById('delete-password-input').value;
+      errBox.style.display = 'none';
+
+      const btn = document.getElementById('btn-submit-delete');
+      const ogHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/users/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: this.userData.id, password: pass })
+        });
+        const d = await res.json();
+        if (d.success) {
+          alert('Tài khoản của bạn đã được xóa.');
+          AuthService.logout(); // Redirect to login
+        } else {
+          errBox.textContent = d.error || 'Lỗi không xác định';
+          errBox.style.display = 'block';
+        }
+      } catch(err) {
+        errBox.textContent = 'Lỗi mạng khi xóa tài khoản';
+        errBox.style.display = 'block';
+      } finally {
+        btn.innerHTML = ogHtml;
+        btn.disabled = false;
+      }
     });
   }
 

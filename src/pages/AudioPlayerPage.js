@@ -76,9 +76,9 @@ export class AudioPlayerPage {
       const isOwner = user && user.roleId === 3 && this.book.authorId === user.authorId;
       const isAdmin = user && user.roleId === 1;
 
-      if (!isApproved && !isOwner && !isAdmin) {
+      if ((!isApproved || this.book.isHidden) && !isOwner && !isAdmin) {
         this.book = null;
-        throw new Error('Access denied: Book is pending approval.');
+        throw new Error('Access denied: Book is pending approval or hidden.');
       }
 
       const rel = (data.authorsOfBooks || []).find(r => r.BookId === this.bookId);
@@ -260,10 +260,14 @@ export class AudioPlayerPage {
                 <p style="color:var(--color-primary);font-size:0.82rem;margin-bottom:0.75rem;">
                   ${this.author ? this.author.firstName + ' ' + this.author.lastName : ''}
                 </p>
-                <!-- Chapter name -->
+                <!-- Chapter indicator -->
                 <p id="chapter-label" style="font-size:0.78rem;color:var(--text-muted);display:flex;align-items:center;gap:0.375rem;">
                   <i class="fa-solid fa-list-ol" style="font-size:0.65rem;"></i>
-                  ${this.chapters[0]?.name || 'Chương 1'}
+                  <span id="chapter-label-text">
+                    ${this.chapters.length > 0
+                      ? (this.chapters.length > 1 ? `Chương 1/${this.chapters.length}: ` : '') + (this.chapters[0]?.name || 'Chương 1')
+                      : 'Chương 1'}
+                  </span>
                 </p>
                 <!-- Waveform -->
                 <div id="player-waveform" style="display:flex;align-items:center;gap:3px;height:36px;margin-top:0.75rem;">
@@ -281,6 +285,22 @@ export class AudioPlayerPage {
                 <input type="range" id="p-range" value="0" min="0" max="100" step="0.1"
                   style="width:100%;" ${!canSeek ? 'disabled' : ''}
                   title="${!canSeek && !isDemo ? 'Gói Premium mới được tua' : ''}" />
+                <!-- Chapter bookmark markers -->
+                ${this.chapters.length > 1 ? `
+                <div id="chapter-markers" style="position:absolute;top:0;left:0;right:0;height:100%;pointer-events:none;">
+                  ${(() => {
+                    const total = this.chapters.reduce((s, c) => s + (c.duration || 0), 0);
+                    if (total <= 0) return '';
+                    let acc = 0;
+                    return this.chapters.slice(0, -1).map(ch => {
+                      acc += ch.duration || 0;
+                      const pct = (acc / total) * 100;
+                      return `<div style="position:absolute;top:50%;left:${pct}%;transform:translate(-50%,-50%);
+                        width:3px;height:10px;border-radius:2px;
+                        background:rgba(255,255,255,0.35);pointer-events:none;"></div>`;
+                    }).join('');
+                  })()}
+                </div>` : ''}
               </div>
               <span id="p-duration" style="font-size:0.75rem;color:var(--text-muted);min-width:36px;">0:00</span>
             </div>
@@ -388,24 +408,26 @@ export class AudioPlayerPage {
               <p style="font-size:0.85rem;color:var(--text-muted);text-align:center;padding:1rem 0;">Chưa có dữ liệu chương.</p>
             ` : this.chapters.map((ch, i) => {
               const locked = !canSeek && i > 0;
+              const isActive = i === this.currentChapter;
               return `
               <div id="ch-${i}" data-chapidx="${i}" class="chapter-item" style="
                 display:flex;align-items:center;gap:0.875rem;padding:0.6rem 0.75rem;
                 border-radius:10px;cursor:${locked ? 'not-allowed' : 'pointer'};transition:background 0.2s;
-                ${i === 0 ? 'background:hsla(260,80%,60%,0.12);' : ''}
+                ${isActive ? 'background:hsla(260,80%,60%,0.12);' : ''}
                 ${locked ? 'opacity:0.5;' : ''}">
                 <div style="width:28px;height:28px;border-radius:8px;flex-shrink:0;font-size:0.72rem;font-weight:700;
                   display:flex;align-items:center;justify-content:center;
-                  background:${i === 0 ? 'var(--color-primary)' : 'var(--bg-main)'};
-                  color:${i === 0 ? '#fff' : 'var(--text-muted)'};"
+                  background:${isActive ? 'var(--color-primary)' : 'var(--bg-main)'};
+                  color:${isActive ? '#fff' : 'var(--text-muted)'};"
                 >
-                  ${i + 1}
+                  ${isActive ? '<i class="fa-solid fa-volume-high" style="font-size:0.6rem;"></i>' : (i + 1)}
                 </div>
                 <div style="flex:1;overflow:hidden;">
-                  <div style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ch.name}</div>
+                  <div style="font-size:0.82rem;font-weight:${isActive ? '700' : '600'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${isActive ? 'var(--text-main)' : 'inherit'}">${ch.name}</div>
                   <div style="font-size:0.7rem;color:var(--text-muted);">${ch.duration ? this._fmt(ch.duration) : ''}</div>
                 </div>
-                ${locked ? '<i class="fa-solid fa-lock" style="color:var(--text-muted);font-size:0.72rem;flex-shrink:0;" title="Cần gói Premium"></i>' : ''}
+                ${isActive ? '<i class="fa-solid fa-headphones" style="color:var(--color-primary);font-size:0.72rem;flex-shrink:0;"></i>' : ''}
+                ${locked && !isActive ? '<i class="fa-solid fa-lock" style="color:var(--text-muted);font-size:0.72rem;flex-shrink:0;"></i>' : ''}
               </div>
             `}).join('')}
           </div>
@@ -781,17 +803,40 @@ export class AudioPlayerPage {
       }),
       audioPlayer.on('chapterchange', (idx) => {
         this.currentChapter = idx;
+        const total = audioPlayer.currentChapters.length;
+        const chapName = audioPlayer.currentChapters[idx]?.name || '';
+
+        // Cập nhật label
+        const labelText = document.getElementById('chapter-label-text');
+        if (labelText) {
+          labelText.textContent = (total > 1 ? `Chương ${idx + 1}/${total}: ` : '') + chapName;
+        }
+
+        // Cập nhật chapter list highlight
         document.querySelectorAll('.chapter-item').forEach((el, i) => {
-          el.style.background = i === idx ? 'hsla(260,80%,60%,0.12)' : 'transparent';
+          const isActive = i === idx;
+          el.style.background = isActive ? 'hsla(260,80%,60%,0.12)' : 'transparent';
           const numEl = el.querySelector('div:first-child');
           if (numEl) {
-            numEl.style.background = i === idx ? 'var(--color-primary)' : 'var(--bg-main)';
-            numEl.style.color = i === idx ? '#fff' : 'var(--text-muted)';
+            numEl.style.background = isActive ? 'var(--color-primary)' : 'var(--bg-main)';
+            numEl.style.color = isActive ? '#fff' : 'var(--text-muted)';
+            numEl.innerHTML = isActive ? '<i class="fa-solid fa-volume-high" style="font-size:0.6rem;"></i>' : String(i + 1);
           }
+          // Icon headphone
+          const icons = el.querySelectorAll('i.fa-headphones, i.fa-lock');
+          icons.forEach(ic => { if (ic.classList.contains('fa-headphones')) ic.style.display = isActive ? '' : 'none'; });
         });
-        const label = document.getElementById('chapter-label');
-        if (label && audioPlayer.currentChapters[idx]) {
-          label.innerHTML = `<i class="fa-solid fa-list-ol" style="font-size:0.65rem;"></i> ${audioPlayer.currentChapters[idx].name}`;
+
+        // Scroll chapter vào view
+        const activeEl = document.getElementById('ch-' + idx);
+        activeEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }),
+      audioPlayer.on('chaptername', (name) => {
+        const labelText = document.getElementById('chapter-label-text');
+        if (labelText && name) {
+          const idx = audioPlayer.currentChapterIdx;
+          const total = audioPlayer.currentChapters.length;
+          labelText.textContent = (total > 1 ? `Chương ${idx + 1}/${total}: ` : '') + name;
         }
       }),
     ];

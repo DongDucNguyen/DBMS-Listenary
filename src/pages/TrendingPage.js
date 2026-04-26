@@ -15,7 +15,7 @@ export class TrendingPage {
       const data = await res.json();
 
       // Gán views từ MockDbService (kết hợp weeklyViewCount + lịch sử nghe thực)
-      this.books = (data.books || []).filter(b => !b.approvalStatus || b.approvalStatus === 'APPROVED').map(b => ({
+      this.books = (data.books || []).filter(b => (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden).map(b => ({
         ...b,
         views: MockDbService.getViewCount(b)
       }))

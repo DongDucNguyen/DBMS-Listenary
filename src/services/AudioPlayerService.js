@@ -15,10 +15,12 @@ class AudioPlayerService {
     this.currentChapters = [];
     this.currentChapterIdx = 0;
     this.isPlaying = false;
-    this.isDemoMode = false;   // FREE user hoặc khách
+    this.isDemoMode = false;
     this.demoTimer = null;
     this.demoSecondsLeft = 30;
     this.listeners = {};
+    this.totalDuration = 0;     // Tổng thời lượng toàn bộ audiobook (giây)
+    this._chapterStarts = [];   // Mảng startOffset tích lũy của từng chương
 
     this.audio.addEventListener('timeupdate', () => this._onTimeUpdate());
     this.audio.addEventListener('ended',      () => this._onEnded());
@@ -62,17 +64,22 @@ class AudioPlayerService {
       this.currentBook = book;
       this.currentChapters = chapters;
       this.currentChapterIdx = 0;
+
+      // Tính cumulative startOffset và totalDuration từ chapter.duration
+      this._chapterStarts = [];
+      let acc = 0;
+      for (const ch of chapters) {
+        this._chapterStarts.push(acc);
+        acc += (ch.duration || 0);
+      }
+      this.totalDuration = acc;
+
       this._loadChapter(0);
-      // Ghi nhận nghe (chỉ BASIC)
       AuthService.recordListen(book.id);
-      // Tăng lượt xem
       MockDbService.incrementView(book.id);
       this._lastSavedProgress = -1;
-      
       const user = AuthService.getUser();
-      if (user) {
-        MockDbService.updateReadingProgress(user.id, book.id, 0);
-      }
+      if (user) MockDbService.updateReadingProgress(user.id, book.id, 0);
     }
 
     this.audio.play().catch(() => {});
@@ -101,6 +108,8 @@ class AudioPlayerService {
     this.isPlaying = false;
     this.isDemoMode = false;
     this.demoSecondsLeft = 30;
+    this.totalDuration = 0;
+    this._chapterStarts = [];
     this._clearDemoTimer();
     this._emit('stop');
     this._emit('pause');
@@ -117,18 +126,37 @@ class AudioPlayerService {
     }
   }
 
-  seek(seconds) {
-    if (AuthService.canSeek()) {
-      this.audio.currentTime = seconds;
-    } else if (AuthService.canListenFull()) {
-      // BASIC: không cho tua
-      this._emit('planblock', { reason: 'seek', plan: 'BASIC' });
+  /**
+   * Seek đến vị trí tuyệt đối (giây) trên toàn audiobook.
+   * Tự tìm đúng chương và seek local trong file đó.
+   */
+  seek(absoluteSeconds) {
+    if (!AuthService.canSeek()) {
+      if (AuthService.canListenFull()) this._emit('planblock', { reason: 'seek', plan: 'BASIC' });
+      return;
     }
-    // FREE: không làm gì
+    const s = Math.max(0, Math.min(absoluteSeconds, this.totalDuration));
+    // Tìm chapter chứa vị trí này
+    let targetIdx = 0;
+    for (let i = this._chapterStarts.length - 1; i >= 0; i--) {
+      if (s >= this._chapterStarts[i]) { targetIdx = i; break; }
+    }
+    const localTime = s - this._chapterStarts[targetIdx];
+    if (targetIdx !== this.currentChapterIdx) {
+      this.currentChapterIdx = targetIdx;
+      this._loadChapter(targetIdx);
+      // Sau khi load, seek local
+      const doSeek = () => { this.audio.currentTime = localTime; };
+      if (this.audio.readyState >= 1) doSeek();
+      else this.audio.addEventListener('loadedmetadata', doSeek, { once: true });
+    } else {
+      this.audio.currentTime = localTime;
+    }
   }
 
   seekPercent(pct) {
-    if (this.audio.duration) this.seek(pct * this.audio.duration);
+    const total = this.totalDuration || this.audio.duration || 1;
+    this.seek(pct * total);
   }
 
   nextChapter() {
@@ -172,30 +200,67 @@ class AudioPlayerService {
   // ── Internal helpers ─────────────────────────────────────────
   _loadChapter(idx) {
     const chapter = this.currentChapters[idx];
-    if (chapter?.audiobookUrl) {
-      this.audio.src = chapter.audiobookUrl;
+    if (!chapter) return;
+
+    if (chapter.audiobookUrl) {
+      // Mỗi chương có URL riêng (bị cắt sẵn)
+      if (this.audio.src !== chapter.audiobookUrl) {
+        this.audio.src = chapter.audiobookUrl;
+      }
       this.audio.currentTime = 0;
-      this._emit('chaptername', chapter.name);
+    } else {
+      // Fallback: 1 file audio chung, seek theo startOffset
+      const audioUrl = this.currentBook?.audioFileUrl || '';
+      if (!audioUrl) return;
+      if (this.audio.src !== audioUrl) {
+        this.audio.src = audioUrl;
+      }
+      const offset = chapter.startOffset || 0;
+      const doSeek = () => { this.audio.currentTime = offset; };
+      if (this.audio.readyState >= 1) doSeek();
+      else this.audio.addEventListener('loadedmetadata', doSeek, { once: true });
     }
+    this._emit('chaptername', chapter.name);
+    this._emit('chapterchange', this.currentChapterIdx);
   }
 
   _onTimeUpdate() {
-    const cur = this.audio.currentTime;
-    const dur = this.audio.duration || 1;
-    this._emit('timeupdate', { current: cur, duration: dur, pct: cur / dur });
+    // Thời gian tuyệt đối = startOffset của chapter hiện tại + audio.currentTime
+    const chapterStart = this._chapterStarts[this.currentChapterIdx] || 0;
+    const localCur = this.audio.currentTime;
+    const absoluteCur = chapterStart + localCur;
+    const total = this.totalDuration > 0 ? this.totalDuration : (this.audio.duration || 1);
+    this._emit('timeupdate', {
+      current: absoluteCur,
+      duration: total,
+      pct: absoluteCur / total,
+      localCurrent: localCur,
+      chapterIdx: this.currentChapterIdx
+    });
 
-    // Lưu tiến độ vào localStorage mỗi 10 giây (throttle)
+    // Kiểm tra kết thúc chương trong fallback mode (1 file + startOffset)
+    const chapter = this.currentChapters[this.currentChapterIdx];
+    if (chapter && !chapter.audiobookUrl && chapter.duration > 0) {
+      const chapEnd = (chapter.startOffset || 0) + chapter.duration;
+      if (localCur >= chapEnd - 0.2) {
+        if (this.currentChapterIdx < this.currentChapters.length - 1) {
+          this.nextChapter();
+        }
+      }
+    }
+
+    // Lưu tiến độ vào localStorage
     const user = AuthService.getUser();
-    if (user && this.currentBook && dur > 1) {
-      const pct = Math.round((cur / dur) * 100);
-      if (Math.abs(pct - this._lastSavedProgress) >= 5) { // mỗi 5%
+    if (user && this.currentBook && total > 1) {
+      const pct = Math.round((absoluteCur / total) * 100);
+      if (Math.abs(pct - this._lastSavedProgress) >= 5) {
         this._lastSavedProgress = pct;
-        MockDbService.updateReadingProgress(user.id, this.currentBook.id, pct, dur);
+        MockDbService.updateReadingProgress(user.id, this.currentBook.id, pct, total);
       }
     }
 
     // Demo 30s cap (FREE / khách)
-    if (this.isDemoMode && cur >= 30) {
+    if (this.isDemoMode && absoluteCur >= 30) {
       this.pause();
       this.audio.currentTime = 0;
       this._emit('demoended');
@@ -231,8 +296,8 @@ class AudioPlayerService {
     if (this.demoTimer) { clearInterval(this.demoTimer); this.demoTimer = null; }
   }
 
-  get currentTime() { return this.audio.currentTime; }
-  get duration() { return this.audio.duration || 0; }
+  get currentTime() { return this._chapterStarts[this.currentChapterIdx] + (this.audio.currentTime || 0); }
+  get duration() { return this.totalDuration || this.audio.duration || 0; }
   get buffered() { return this.audio.buffered; }
 }
 

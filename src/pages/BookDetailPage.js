@@ -29,12 +29,14 @@ export class BookDetailPage {
     if (!this.book) { this.isLoading = false; this._reRender(); return; }
 
     const user = AuthService.getUser();
-    const isApproved = !this.book.approvalStatus || this.book.approvalStatus === 'APPROVED';
+    const isAdmin = user?.roleId === 1;
+    // Map authorId properly using relationships if needed, or if book.authorId is the same as the user's mapped AuthorId
     const isOwner = user && user.roleId === 3 && this.book.authorId === user.authorId;
-    const isAdmin = user && user.roleId === 1;
-
-    if (!isApproved && !isOwner && !isAdmin) {
-      // Access denied for normal users viewing unapproved books
+    
+    const isApproved = !this.book.approvalStatus || this.book.approvalStatus === 'APPROVED';
+    
+    // Nếu sách bị ẩn hoặc CHƯA DUYỆT, chỉ Admin hoặc Tác giả mới xem được
+    if ((this.book.isHidden || !isApproved) && !isAdmin && !isOwner) {
       this.book = null;
       this.isLoading = false;
       this._reRender();

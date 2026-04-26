@@ -14,7 +14,7 @@ export class AuthorsPage {
     const res = await fetch('/database.json?t=' + Date.now());
     const data = await res.json();
     this.authors = data.author;
-    this.books = (data.books || []).filter(b => !b.approvalStatus || b.approvalStatus === 'APPROVED');
+    this.books = (data.books || []).filter(b => (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden);
     this.authorsOfBooks = data.authorsOfBooks || [];
     this.isLoading = false;
     this._reRender();

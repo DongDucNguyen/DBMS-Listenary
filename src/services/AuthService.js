@@ -17,6 +17,7 @@ export const AuthService = {
     const data = await res.json();
     let user = data.user.find(u => u.username === username && u.encryptedPassword === password);
     if (!user) throw new Error('Tên đăng nhập hoặc mật khẩu không đúng.');
+    if (user.hasLocked) throw new Error('Tài khoản của bạn đã bị vô hiệu hóa.');
     
     // Khôi phục dữ liệu đã chỉnh sửa từ localStorage (mock backend)
     const mockUsers = JSON.parse(localStorage.getItem(this.MOCK_DB_KEY) || '{}');
@@ -40,6 +41,20 @@ export const AuthService = {
     const sessionUser = this._normalizeUser({ ...user, roleName: role?.name });
     sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(sessionUser));
     return sessionUser;
+  },
+
+  async register(username, email, password) {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Có lỗi xảy ra khi tạo tài khoản.');
+    }
+    // Return newly created user object, so UI can automatically login or prompt to login
+    return data.user;
   },
 
   logout() {

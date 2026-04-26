@@ -54,7 +54,7 @@ export class SearchPage {
       const res = await fetch('/database.json?t=' + Date.now());
       const data = await res.json();
 
-      this.books = (data.books || []).filter(b => !b.approvalStatus || b.approvalStatus === 'APPROVED');
+      this.books = (data.books || []).filter(b => (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden);
       this.authors = data.author || [];
       this.authorsOfBooks = data.authorsOfBooks || [];
       this.categories = data.category || [];

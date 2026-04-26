@@ -3,6 +3,13 @@ import { AuthService } from '../services/AuthService.js';
 export class LoginPage {
   constructor() {
     this.isLoading = false;
+    this.isSignup = false;
+  }
+
+  reRender() {
+    const app = document.getElementById('app') || document.body;
+    app.innerHTML = this.render();
+    this.afterRender();
   }
 
   render() {
@@ -52,16 +59,18 @@ export class LoginPage {
         <!-- Divider -->
         <div style="width: 1px; height: 400px; background: var(--glass-border); margin: 0 3rem;"></div>
 
-        <!-- Right: Login Form -->
+        <!-- Right: Auth Form -->
         <div class="glass-panel animate-slide-up stagger-2" style="
           flex: 1;
           max-width: 420px;
           padding: 3rem;
         ">
-          <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Đăng nhập</h2>
-          <p style="color: var(--text-muted); margin-bottom: 2rem;">Chào mừng trở lại! Vui lòng đăng nhập để tiếp tục.</p>
+          <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">${this.isSignup ? 'Tạo tài khoản' : 'Đăng nhập'}</h2>
+          <p style="color: var(--text-muted); margin-bottom: 2rem;">
+            ${this.isSignup ? 'Tạo tài khoản mới để bắt đầu nghe sách.' : 'Chào mừng trở lại! Vui lòng đăng nhập để tiếp tục.'}
+          </p>
 
-          <div id="login-error" style="
+          <div id="auth-error" style="
             display: none;
             background: rgba(255, 71, 87, 0.15);
             border: 1px solid rgba(255, 71, 87, 0.4);
@@ -71,19 +80,20 @@ export class LoginPage {
             margin-bottom: 1rem;
             font-size: 0.9rem;
           ">
-            <i class="fa-solid fa-circle-exclamation"></i> <span id="login-error-text"></span>
+            <i class="fa-solid fa-circle-exclamation"></i> <span id="auth-error-text"></span>
           </div>
 
-          <form id="login-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
+          <form id="auth-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
             <div>
               <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted);">Tên đăng nhập</label>
               <div style="position: relative;">
                 <i class="fa-solid fa-user" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                 <input
-                  id="login-username"
+                  id="auth-username"
                   type="text"
                   placeholder="Nhập tên đăng nhập..."
                   autocomplete="username"
+                  required
                   style="
                     width: 100%;
                     padding: 0.875rem 1rem 0.875rem 2.75rem;
@@ -102,15 +112,46 @@ export class LoginPage {
               </div>
             </div>
 
+            ${this.isSignup ? `
+            <div>
+              <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted);">Email</label>
+              <div style="position: relative;">
+                <i class="fa-solid fa-envelope" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                <input
+                  id="auth-email"
+                  type="email"
+                  placeholder="Nhập email của bạn..."
+                  autocomplete="email"
+                  required
+                  style="
+                    width: 100%;
+                    padding: 0.875rem 1rem 0.875rem 2.75rem;
+                    background: var(--bg-main);
+                    border: 1px solid var(--glass-border);
+                    border-radius: 12px;
+                    color: var(--text-main);
+                    font-size: 1rem;
+                    font-family: var(--font-sans);
+                    outline: none;
+                    transition: all var(--transition-fast);
+                  "
+                  onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px hsla(260,80%,60%,0.15)'"
+                  onblur="this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none'"
+                />
+              </div>
+            </div>
+            ` : ''}
+
             <div>
               <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted);">Mật khẩu</label>
               <div style="position: relative;">
                 <i class="fa-solid fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
                 <input
-                  id="login-password"
-                  type="password"
+                  id="auth-password"
+                  type="${this.isSignup ? 'password' : 'password'}"
                   placeholder="Nhập mật khẩu..."
-                  autocomplete="current-password"
+                  autocomplete="${this.isSignup ? 'new-password' : 'current-password'}"
+                  required
                   style="
                     width: 100%;
                     padding: 0.875rem 2.75rem 0.875rem 2.75rem;
@@ -132,7 +173,38 @@ export class LoginPage {
               </div>
             </div>
 
-            <!-- Quick Account Hints -->
+            ${this.isSignup ? `
+            <div>
+              <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted);">Xác nhận mật khẩu</label>
+              <div style="position: relative;">
+                <i class="fa-solid fa-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                <input
+                  id="auth-confirm-password"
+                  type="password"
+                  placeholder="Xác nhận mật khẩu..."
+                  autocomplete="new-password"
+                  required
+                  style="
+                    width: 100%;
+                    padding: 0.875rem 2.75rem 0.875rem 2.75rem;
+                    background: var(--bg-main);
+                    border: 1px solid var(--glass-border);
+                    border-radius: 12px;
+                    color: var(--text-main);
+                    font-size: 1rem;
+                    font-family: var(--font-sans);
+                    outline: none;
+                    transition: all var(--transition-fast);
+                  "
+                  onfocus="this.style.borderColor='var(--color-primary)'; this.style.boxShadow='0 0 0 3px hsla(260,80%,60%,0.15)'"
+                  onblur="this.style.borderColor='var(--glass-border)'; this.style.boxShadow='none'"
+                />
+              </div>
+            </div>
+            ` : ''}
+
+            <!-- Quick Account Hints, only in Login mode -->
+            ${!this.isSignup ? `
             <div style="background: var(--bg-main); padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.82rem; color: var(--text-muted);">
               <p style="font-weight: 600; margin-bottom: 0.4rem; color: var(--text-main);">Tài khoản demo:</p>
               <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
@@ -150,14 +222,20 @@ export class LoginPage {
                 </button>
               </div>
             </div>
+            ` : ''}
 
-            <button type="submit" id="login-btn" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem; position: relative; overflow: hidden; margin-top: 0.5rem;">
-              <span id="login-btn-text"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</span>
+            <button type="submit" id="auth-btn" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem; position: relative; overflow: hidden; margin-top: 0.5rem;">
+              <span id="auth-btn-text">
+                ${this.isSignup ? '<i class="fa-solid fa-user-plus"></i> Đăng ký' : '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập'}
+              </span>
             </button>
           </form>
 
           <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
-            Chưa có tài khoản? <a href="#explore" style="color: var(--color-primary); font-weight: 600;">Khám phá ngay</a>
+            ${this.isSignup 
+              ? `Đã có tài khoản? <a href="#" id="toggle-auth-mode" style="color: var(--color-primary); font-weight: 600;">Đăng nhập ngay</a>`
+              : `Chưa có tài khoản? <a href="#" id="toggle-auth-mode" style="color: var(--color-primary); font-weight: 600;">Đăng ký ngay</a>`
+            }
           </p>
         </div>
       </div>
@@ -165,61 +243,101 @@ export class LoginPage {
   }
 
   afterRender() {
-    const form = document.getElementById('login-form');
-    const errorBox = document.getElementById('login-error');
-    const errorText = document.getElementById('login-error-text');
-    const btn = document.getElementById('login-btn');
-    const btnText = document.getElementById('login-btn-text');
+    const form = document.getElementById('auth-form');
+    const errorBox = document.getElementById('auth-error');
+    const errorText = document.getElementById('auth-error-text');
+    const btn = document.getElementById('auth-btn');
+    const btnText = document.getElementById('auth-btn-text');
     const togglePasswordBtn = document.getElementById('toggle-password');
-    const passwordInput = document.getElementById('login-password');
+    const passwordInput = document.getElementById('auth-password');
+    const toggleModeLinks = document.querySelectorAll('#toggle-auth-mode');
 
-    // Toggle password visibility
-    togglePasswordBtn.addEventListener('click', () => {
-      const type = passwordInput.type === 'password' ? 'text' : 'password';
-      passwordInput.type = type;
-      togglePasswordBtn.innerHTML = type === 'password'
-        ? '<i class="fa-solid fa-eye"></i>'
-        : '<i class="fa-solid fa-eye-slash"></i>';
-    });
-
-    // Demo account quick-fill buttons
-    document.querySelectorAll('.demo-account-btn').forEach(demoBtn => {
-      demoBtn.addEventListener('click', () => {
-        document.getElementById('login-username').value = demoBtn.dataset.user;
-        document.getElementById('login-password').value = demoBtn.dataset.pass;
-        demoBtn.style.borderColor = 'var(--color-primary)';
-        setTimeout(() => demoBtn.style.borderColor = 'var(--glass-border)', 800);
+    // Toggle Mode
+    toggleModeLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.isSignup = !this.isSignup;
+        this.reRender();
       });
     });
+
+    // Toggle password visibility
+    if (togglePasswordBtn) {
+      togglePasswordBtn.addEventListener('click', () => {
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+        togglePasswordBtn.innerHTML = type === 'password'
+          ? '<i class="fa-solid fa-eye"></i>'
+          : '<i class="fa-solid fa-eye-slash"></i>';
+      });
+    }
+
+    // Demo account quick-fill buttons
+    if (!this.isSignup) {
+      document.querySelectorAll('.demo-account-btn').forEach(demoBtn => {
+        demoBtn.addEventListener('click', () => {
+          document.getElementById('auth-username').value = demoBtn.dataset.user;
+          document.getElementById('auth-password').value = demoBtn.dataset.pass;
+          demoBtn.style.borderColor = 'var(--color-primary)';
+          setTimeout(() => demoBtn.style.borderColor = 'var(--glass-border)', 800);
+        });
+      });
+    }
 
     // Handle form submit
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('login-username').value.trim();
-      const password = document.getElementById('login-password').value;
+      const username = document.getElementById('auth-username').value.trim();
+      const password = document.getElementById('auth-password').value;
+      let email = '';
+      let confirmPassword = '';
 
-      if (!username || !password) {
-        this.showError(errorBox, errorText, 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.');
-        return;
+      if (this.isSignup) {
+        email = document.getElementById('auth-email').value.trim();
+        confirmPassword = document.getElementById('auth-confirm-password').value;
+        if (!username || !password || !email || !confirmPassword) {
+          this.showError(errorBox, errorText, 'Vui lòng nhập đầy đủ thông tin đăng ký.');
+          return;
+        }
+        if (password !== confirmPassword) {
+          this.showError(errorBox, errorText, 'Mật khẩu xác nhận không khớp.');
+          return;
+        }
+      } else {
+        if (!username || !password) {
+          this.showError(errorBox, errorText, 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.');
+          return;
+        }
       }
 
       btn.disabled = true;
-      btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng nhập...';
+      btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${this.isSignup ? 'Đang đăng ký...' : 'Đang đăng nhập...'}`;
 
       try {
-        const user = await AuthService.login(username, password);
-        const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
-        const redirect = params.get('redirect');
-        const safeRedirect = redirect?.startsWith('#') && !redirect.startsWith('#login')
-          ? redirect
-          : null;
-        const targetRoute = safeRedirect || AuthService.defaultRouteForRole(user.roleId);
-        window.location.hash = targetRoute;
+        if (this.isSignup) {
+          // Register flow
+          await AuthService.register(username, email, password);
+          alert('Đăng ký thành công! Vui lòng tiến hành đăng nhập.');
+          this.isSignup = false;
+          this.reRender();
+        } else {
+          // Login flow
+          const user = await AuthService.login(username, password);
+          const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+          const redirect = params.get('redirect');
+          const safeRedirect = redirect?.startsWith('#') && !redirect.startsWith('#login')
+            ? redirect
+            : null;
+          const targetRoute = safeRedirect || AuthService.defaultRouteForRole(user.roleId);
+          window.location.hash = targetRoute;
+        }
       } catch (err) {
         this.showError(errorBox, errorText, err.message);
       } finally {
-        btn.disabled = false;
-        btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập';
+        if (btn) {
+          btn.disabled = false;
+          btnText.innerHTML = this.isSignup ? '<i class="fa-solid fa-user-plus"></i> Đăng ký' : '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập';
+        }
       }
     });
   }

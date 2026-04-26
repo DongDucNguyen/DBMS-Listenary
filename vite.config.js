@@ -141,6 +141,8 @@ const mockDbApiPlugin = () => ({
                 // remove old chapters
                 dbData.audioChapter = dbData.audioChapter.filter(c => c.bookId !== bookId);
                 // add new ones
+                // rebuild chapters with startOffset
+                let offset = 0;
                 payload.chapters.forEach((ch, idx) => {
                   const newChapId = dbData.audioChapter.length > 0 ? Math.max(...dbData.audioChapter.map(x => x.id)) + 1 : 1;
                   dbData.audioChapter.push({
@@ -149,8 +151,10 @@ const mockDbApiPlugin = () => ({
                     chapterNumber: idx + 1,
                     name: ch.name || `Chương ${idx + 1}`,
                     duration: ch.duration || 0,
+                    startOffset: offset,
                     audiobookUrl: ch.audiobookUrl || ''
                   });
+                  offset += ch.duration || 0;
                 });
               }
 
@@ -221,6 +225,129 @@ const mockDbApiPlugin = () => ({
           return;
         }
 
+        // Endpoint: Admin Xóa sách không cần mật khẩu (DELETE /api/admin/books/:id)
+        if (req.method === 'DELETE' && req.url.startsWith('/api/admin/books/')) {
+          const parts = req.url.split('/');
+          const bookId = parseInt(parts[4], 10);
+
+          const bookIndex = dbData.books.findIndex(b => b.id === bookId);
+          if (bookIndex >= 0) {
+            dbData.books.splice(bookIndex, 1);
+            // Xóa các liên kết
+            if (dbData.authorsOfBooks) dbData.authorsOfBooks = dbData.authorsOfBooks.filter(r => r.BookId !== bookId);
+            if (dbData.categoriesOfBooks) dbData.categoriesOfBooks = dbData.categoriesOfBooks.filter(r => r.BookId !== bookId);
+            if (dbData.audioChapter) dbData.audioChapter = dbData.audioChapter.filter(c => c.bookId !== bookId);
+            if (dbData.comments) dbData.comments = dbData.comments.filter(c => c.bookId !== bookId);
+            if (dbData.userFavorites) dbData.userFavorites = dbData.userFavorites.filter(f => f.bookId !== bookId);
+            if (dbData.listeningAudioBook) dbData.listeningAudioBook = dbData.listeningAudioBook.filter(h => h.bookId !== bookId);
+
+            fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: true }));
+            return;
+          }
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: 'Book not found' }));
+          return;
+        }
+
+        // Endpoint: Admin toggle ẩn sách
+        if (req.method === 'POST' && req.url.startsWith('/api/admin/books/') && req.url.endsWith('/toggleHide')) {
+          const parts = req.url.split('/');
+          const bookId = parseInt(parts[4], 10);
+          
+          const book = dbData.books.find(b => b.id === bookId);
+          if (book) {
+            book.isHidden = !book.isHidden;
+            fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: true, isHidden: book.isHidden }));
+            return;
+          }
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: 'Book not found' }));
+          return;
+        }
+
+        // Endpoint: Admin tạo sách mới
+        if (req.method === 'POST' && req.url === '/api/admin/books/create') {
+          const newId = dbData.books.length > 0 ? Math.max(...dbData.books.map(b => b.id)) + 1 : 1;
+          let finalAuthorId = null;
+          let createdAuthor = null;
+          if (payload.authorId === 'NEW' && payload.newAuthorName) {
+            finalAuthorId = dbData.author.length > 0 ? Math.max(...dbData.author.map(a => a.id)) + 1 : 1;
+            const parts = payload.newAuthorName.trim().split(' ');
+            const lastName = parts.pop();
+            const firstName = parts.join(' ');
+            createdAuthor = {
+              id: finalAuthorId,
+              firstName: firstName,
+              lastName: lastName,
+              birthday: null,
+              imagineUrl: "",
+              description: "Tác giả mới"
+            };
+            dbData.author.push(createdAuthor);
+          } else {
+            finalAuthorId = parseInt(payload.authorId) || null;
+          }
+
+          const newBook = {
+            id: newId,
+            name: payload.name || 'Untitled',
+            thumbnailUrl: payload.thumbnailUrl || '',
+            description: payload.description || '',
+            country: payload.country || '',
+            language: payload.language || 'VN',
+            pageNumber: parseInt(payload.pageNumber) || 0,
+            releaseDate: payload.releaseDate || null,
+            ebookFileUrl: payload.ebookFileUrl || '',
+            weeklyViewCount: 0,
+            lastWeekReset: null,
+            PublishingHouseId: payload.PublishingHouseId ? parseInt(payload.PublishingHouseId) : null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            authorId: finalAuthorId,
+            viewCount: 0,
+            approvalStatus: 'APPROVED', // Admin create is instantly approved
+            audioFileUrl: payload.audioFileUrl || '',
+            copyrightFileUrl: payload.copyrightFileUrl || '',
+            submittedByUserId: parseInt(payload.submittedByUserId) || null,
+            categoryId: payload.categoryId ? parseInt(payload.categoryId) : null
+          };
+          dbData.books.unshift(newBook); // Add to top
+
+          if (payload.categoryId) {
+            if (!dbData.categoriesOfBooks) dbData.categoriesOfBooks = [];
+            dbData.categoriesOfBooks.push({ BookId: newId, CategoryId: parseInt(payload.categoryId) });
+          }
+          if (finalAuthorId) {
+            if (!dbData.authorsOfBooks) dbData.authorsOfBooks = [];
+            dbData.authorsOfBooks.push({ BookId: newId, AuthorId: finalAuthorId });
+          }
+          if (payload.chapters && Array.isArray(payload.chapters)) {
+            if (!dbData.audioChapter) dbData.audioChapter = [];
+            payload.chapters.forEach((ch, i) => {
+              const chId = dbData.audioChapter.length > 0 ? Math.max(...dbData.audioChapter.map(c => c.id)) + 1 + i : 1 + i;
+              dbData.audioChapter.push({
+                id: chId,
+                chapterNumber: i + 1,
+                name: ch.name || `Chương ${i+1}`,
+                audiobookUrl: ch.url || payload.audioFileUrl || '',
+                duration: parseFloat(ch.duration) || 0,
+                bookId: newId,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              });
+            });
+          }
+
+          fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true, book: newBook, createdAuthor }));
+          return;
+        }
+
         // Endpoint: Tăng lượt view của Sách
         if (req.method === 'POST' && req.url.startsWith('/api/books/')) {
           const parts = req.url.split('/');
@@ -273,6 +400,8 @@ const mockDbApiPlugin = () => ({
             // Thêm Chapters (nếu có)
             if (payload.chapters && Array.isArray(payload.chapters)) {
               if (!dbData.audioChapter) dbData.audioChapter = [];
+              // save chapters with startOffset + audiobookUrl
+              let offset = 0;
               payload.chapters.forEach((ch, idx) => {
                 const newChapId = dbData.audioChapter.length > 0 ? Math.max(...dbData.audioChapter.map(x => x.id)) + 1 : 1;
                 dbData.audioChapter.push({
@@ -281,8 +410,10 @@ const mockDbApiPlugin = () => ({
                   chapterNumber: idx + 1,
                   name: ch.name || `Chương ${idx + 1}`,
                   duration: ch.duration || 0,
+                  startOffset: offset,
                   audiobookUrl: ch.audiobookUrl || ''
                 });
+                offset += ch.duration || 0;
               });
             }
 
@@ -432,6 +563,220 @@ const mockDbApiPlugin = () => ({
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ success: true, data: responseData }));
           return;
+        }
+
+        // Endpoint: Admin Tạo User
+        if (req.method === 'POST' && req.url === '/api/admin/users/create') {
+          const { username, email, password, firstName, lastName, roleId, phoneNumber, addresses, birthday } = payload;
+          if (!username || !email || !password || !roleId) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: 'Thiếu thông tin bắt buộc' }));
+            return;
+          }
+
+          if (dbData.user.some(u => u.username === username || u.email === email)) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: 'Username hoặc Email đã tồn tại' }));
+            return;
+          }
+
+          const newId = dbData.user.length > 0 ? Math.max(...dbData.user.map(u => u.id)) + 1 : 1;
+          const newUser = {
+            id: newId,
+            username,
+            encryptedPassword: password, // Mật khẩu mock để đăng nhập
+            firstName: firstName || '',
+            lastName: lastName || '',
+            email,
+            emailVerifiedAt: new Date().toISOString(),
+            phoneNumber: phoneNumber || null,
+            addresses: addresses || null,
+            birthday: birthday || null,
+            loginFailedAttempts: 0,
+            hasLocked: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            roleId: parseInt(roleId, 10),
+            subscriptionPlan: "FREE",
+            thumbnailUrl: ""
+          };
+
+          if (newUser.roleId === 3) { // Author
+            const newAuthorId = dbData.author && dbData.author.length > 0 ? Math.max(...dbData.author.map(a => a.id)) + 1 : 1;
+            newUser.authorId = newAuthorId;
+            if (!dbData.author) dbData.author = [];
+            dbData.author.push({
+              id: newAuthorId,
+              firstName: firstName || '',
+              lastName: lastName || '',
+              birthday: birthday || null,
+              imagineUrl: '',
+              description: 'Tác giả mới'
+            });
+          }
+
+          dbData.user.unshift(newUser); // Đưa lên đầu
+          fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true, user: newUser }));
+          return;
+        }
+
+        // Endpoint: Admin Toggle Khóa User
+        if (req.method === 'POST' && req.url.startsWith('/api/admin/users/') && req.url.endsWith('/toggleLock')) {
+          const userId = parseInt(req.url.split('/')[4], 10);
+          const idx = dbData.user.findIndex(u => u.id === userId);
+          if (idx >= 0) {
+            if (dbData.user[idx].roleId === 1) {
+              res.statusCode = 403;
+              res.end(JSON.stringify({ error: 'Không thể vô hiệu hóa tài khoản Admin' }));
+            } else {
+              dbData.user[idx].hasLocked = !dbData.user[idx].hasLocked;
+              fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true, hasLocked: dbData.user[idx].hasLocked }));
+            }
+          } else {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: 'User not found' }));
+          }
+          return;
+        }
+
+        // Endpoint: Đăng ký User
+        if (req.method === 'POST' && req.url === '/api/auth/register') {
+          const { username, password, email } = payload;
+          if (!username || !password || !email) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: 'Vui lòng nhập đủ thông tin' }));
+            return;
+          }
+          if (dbData.user.some(u => u.username === username)) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: 'Tên đăng nhập đã tồn tại' }));
+            return;
+          }
+          if (dbData.user.some(u => u.email === email)) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: 'Email đã tồn tại' }));
+            return;
+          }
+
+          const newId = dbData.user.length > 0 ? Math.max(...dbData.user.map(u => u.id)) + 1 : 1;
+          const newUser = {
+            id: newId,
+            username,
+            encryptedPassword: password,
+            firstName: username,
+            lastName: "",
+            email,
+            emailVerifiedAt: "",
+            phoneNumber: "",
+            addresses: "",
+            birthday: "",
+            loginFailedAttempts: 0,
+            hasLocked: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: "",
+            roleId: 2, // 2: ROLE_USER
+            subscriptionPlan: "",
+            thumbnailUrl: `https://ui-avatars.com/api/?name=${username}&background=7c3aed&color=fff`,
+            authorId: 0
+          };
+
+          dbData.user.unshift(newUser);
+          fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: true, user: newUser }));
+          return;
+        }
+
+        // Endpoint: Đổi mật khẩu
+        if (req.method === 'POST' && req.url === '/api/users/update-password') {
+          const { userId, oldPassword, newPassword } = payload;
+          const userIdx = dbData.user.findIndex(u => u.id === userId);
+          if (userIdx >= 0) {
+            if (dbData.user[userIdx].encryptedPassword !== oldPassword) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: 'Mật khẩu cũ không chính xác' }));
+              return;
+            }
+            dbData.user[userIdx].encryptedPassword = newPassword;
+            fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: true }));
+          } else {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: 'User not found' }));
+          }
+          return;
+        }
+
+        // Endpoint: Xóa tài khoản (bởi chính người dùng)
+        if (req.method === 'POST' && req.url === '/api/users/delete') {
+          const { userId, password } = payload;
+          const idx = dbData.user.findIndex(u => u.id === userId);
+          if (idx >= 0) {
+            if (dbData.user[idx].encryptedPassword !== password) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: 'Mật khẩu không chính xác' }));
+              return;
+            }
+            if (dbData.user[idx].roleId === 1) {
+              res.statusCode = 403;
+              res.end(JSON.stringify({ error: 'Không thể xóa tài khoản Admin' }));
+              return;
+            }
+
+            const authorIdToRemove = dbData.user[idx].authorId;
+            dbData.user.splice(idx, 1);
+            if (authorIdToRemove && dbData.author) dbData.author = dbData.author.filter(a => a.id !== authorIdToRemove);
+            
+            if (dbData.comments) dbData.comments = dbData.comments.filter(c => c.userId !== userId);
+            if (dbData.userFavorites) dbData.userFavorites = dbData.userFavorites.filter(f => f.userId !== userId);
+            if (dbData.listeningAudioBook) dbData.listeningAudioBook = dbData.listeningAudioBook.filter(l => l.userId !== userId);
+            if (dbData.userSubscriptions) dbData.userSubscriptions = dbData.userSubscriptions.filter(s => s.userId !== userId);
+            
+            fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: true }));
+          } else {
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: 'User not found' }));
+          }
+          return;
+        }
+
+        // Endpoint: Admin Xóa User
+        if (req.method === 'DELETE' && req.url.startsWith('/api/admin/users/')) {
+          const parts = req.url.split('/');
+          if (parts.length === 5) {
+            const userId = parseInt(parts[4], 10);
+            const usr = dbData.user.find(u => u.id === userId);
+            if (usr) {
+              if (usr.roleId === 1) {
+                res.statusCode = 403;
+                res.end(JSON.stringify({ error: 'Không thể xóa tài khoản Admin' }));
+                return;
+              }
+              
+              dbData.user = dbData.user.filter(u => u.id !== userId);
+              if (usr.authorId && dbData.author) {
+                dbData.author = dbData.author.filter(a => a.id !== usr.authorId);
+                // Also optionally clean up their books or leave them orphaned
+              }
+              dbData.comments = (dbData.comments || []).filter(c => c.userId !== userId);
+              dbData.userFavorites = (dbData.userFavorites || []).filter(f => f.userId !== userId);
+              
+              fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true }));
+            } else {
+              res.statusCode = 404;
+              res.end(JSON.stringify({ error: 'User not found' }));
+            }
+            return;
+          }
         }
 
         res.statusCode = 404;

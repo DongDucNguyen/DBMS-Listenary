@@ -18,89 +18,164 @@
   ],
   "user": [
     {
+      "id": 10,
+      "username": "duyen",
+      "encryptedPassword": "123456",
+      "firstName": "duyen",
+      "lastName": "",
+      "email": "duyen@123",
+      "emailVerifiedAt": "",
+      "phoneNumber": "",
+      "addresses": "",
+      "birthday": "",
+      "loginFailedAttempts": 0,
+      "hasLocked": false,
+      "createdAt": "2026-04-26T18:14:28.001Z",
+      "updatedAt": "",
+      "roleId": 2,
+      "subscriptionPlan": "",
+      "thumbnailUrl": "https://ui-avatars.com/api/?name=duyen&background=7c3aed&color=fff",
+      "authorId": 0
+    },
+    {
+      "id": 9,
+      "username": "admin1",
+      "encryptedPassword": "123456",
+      "firstName": "",
+      "lastName": "",
+      "email": "admin1@gmail.comcom",
+      "emailVerifiedAt": "2026-04-26T17:06:31.057Z",
+      "phoneNumber": null,
+      "addresses": null,
+      "birthday": null,
+      "loginFailedAttempts": 0,
+      "hasLocked": false,
+      "createdAt": "2026-04-26T17:06:31.057Z",
+      "updatedAt": "2026-04-26T17:06:31.057Z",
+      "roleId": 1,
+      "subscriptionPlan": "FREE",
+      "thumbnailUrl": "",
+      "authorId": 0
+    },
+    {
       "id": 1,
       "username": "admin",
-      "email": "admin@example.com",
       "encryptedPassword": "admin123",
-      "roleId": 1,
       "firstName": "Admin",
       "lastName": "User",
-      "thumbnailUrl": "https://ui-avatars.com/api/?name=Admin+User&background=7c3aed&color=fff",
+      "email": "admin@example.com",
+      "emailVerifiedAt": "",
       "phoneNumber": "0123456789",
-      "birthday": "1990-01-01",
       "addresses": "Hanoi, Vietnam",
-      "createdAt": "2025-01-02"
+      "birthday": "1990-01-01",
+      "loginFailedAttempts": 0,
+      "hasLocked": false,
+      "createdAt": "2025-01-02",
+      "updatedAt": "",
+      "roleId": 1,
+      "subscriptionPlan": "",
+      "thumbnailUrl": "https://ui-avatars.com/api/?name=Admin+User&background=7c3aed&color=fff",
+      "authorId": 0
     },
     {
       "id": 2,
       "username": "bob",
-      "email": "bob@example.com",
       "encryptedPassword": "bob123",
-      "roleId": 2,
       "firstName": "Bob",
       "lastName": "Nguyen",
-      "thumbnailUrl": "",
+      "email": "bob@example.com",
+      "emailVerifiedAt": "",
       "phoneNumber": "0987654321",
-      "birthday": "1995-05-11",
       "addresses": "HCMC, Vietnam",
-      "createdAt": "2025-11-5"
+      "birthday": "1995-05-11",
+      "loginFailedAttempts": 0,
+      "hasLocked": false,
+      "createdAt": "2025-11-5",
+      "updatedAt": "",
+      "roleId": 2,
+      "subscriptionPlan": "",
+      "thumbnailUrl": "",
+      "authorId": 0
     },
     {
       "id": 3,
       "username": "test",
-      "email": "test@example.com",
       "encryptedPassword": "test123",
-      "roleId": 2,
       "firstName": "Test",
       "lastName": "Tran",
+      "email": "test@example.com",
+      "emailVerifiedAt": "",
       "phoneNumber": "0987654782",
+      "addresses": "",
       "birthday": "1995-05-10",
-      "createdAt": "2025-11-29"
+      "loginFailedAttempts": 0,
+      "hasLocked": false,
+      "createdAt": "2025-11-29",
+      "updatedAt": "",
+      "roleId": 2,
+      "subscriptionPlan": "",
+      "thumbnailUrl": "",
+      "authorId": 0
     },
     {
       "id": 4,
       "username": "aristotle_author",
-      "email": "aristotle@listenary.com",
       "encryptedPassword": "author123",
-      "roleId": 3,
-      "authorId": 1,
       "firstName": "Aristotle",
       "lastName": "",
-      "thumbnailUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/author/1.png",
+      "email": "aristotle@listenary.com",
+      "emailVerifiedAt": "",
       "phoneNumber": "0200000010",
-      "birthday": "384 TCN",
       "addresses": "Athens, Greece",
-      "createdAt": "2025-11-08"
+      "birthday": "384 TCN",
+      "loginFailedAttempts": 0,
+      "hasLocked": false,
+      "createdAt": "2025-11-08",
+      "updatedAt": "",
+      "roleId": 3,
+      "subscriptionPlan": "",
+      "thumbnailUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/author/1.png",
+      "authorId": 1
     },
     {
       "id": 5,
       "username": "paulo_author",
-      "email": "paulo@listenary.com",
       "encryptedPassword": "author123",
-      "roleId": 3,
-      "authorId": 22,
       "firstName": "Paulo",
       "lastName": "Coelho",
-      "thumbnailUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/author/22.png",
+      "email": "paulo@listenary.com",
+      "emailVerifiedAt": "",
       "phoneNumber": "0200000022",
-      "birthday": "24/8/1947",
       "addresses": "Brazil",
-      "createdAt": "2025-11-08"
+      "birthday": "24/8/1947",
+      "loginFailedAttempts": 0,
+      "hasLocked": false,
+      "createdAt": "2025-11-08",
+      "updatedAt": "",
+      "roleId": 3,
+      "subscriptionPlan": "",
+      "thumbnailUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/author/22.png",
+      "authorId": 22
     },
     {
       "id": 6,
       "username": "george_author",
-      "email": "george@listenary.com",
       "encryptedPassword": "author123",
-      "roleId": 3,
-      "authorId": 21,
       "firstName": "George",
       "lastName": "Orwell",
-      "thumbnailUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/author/21.png",
+      "email": "george@listenary.com",
+      "emailVerifiedAt": "",
       "phoneNumber": "0200000021",
-      "birthday": "25/6/1903",
       "addresses": "UK",
-      "createdAt": "2025-11-08"
+      "birthday": "25/6/1903",
+      "loginFailedAttempts": 0,
+      "hasLocked": false,
+      "createdAt": "2025-11-08",
+      "updatedAt": "",
+      "roleId": 3,
+      "subscriptionPlan": "",
+      "thumbnailUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/author/21.png",
+      "authorId": 21
     }
   ],
   "author": [
@@ -447,6 +522,14 @@
       "imagineUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/author/43.png",
       "description": "Nữ bác sĩ, liệt sĩ người Việt Nam, sinh tại Hà Nội. Bà tốt nghiệp Đại học Y Hà Nội, tình nguyện vào chiến trường miền Nam làm bác sĩ quân y. Trong quá trình công tác, bà đã viết nhật ký ghi lại tâm tư, lý tưởng và tình yêu đất nước cháy bỏng giữa bom đạn. Bà hi sinh khi mới 28 tuổi. Cuốn nhật ký của bà được một sĩ quan Mỹ lưu giữ suốt nhiều năm trước khi được trao lại cho gia đình, trở thành hiện tượng văn học xúc động và góp phần khơi dậy lòng yêu nước, trân trọng hòa bình trong nhiều thế hệ độc giả.",
       "birthday": "26/11/1942"
+    },
+    {
+      "id": 44,
+      "firstName": "",
+      "lastName": "duyen",
+      "imagineUrl": "",
+      "description": "Tác giả mới",
+      "birthday": null
     }
   ],
   "publishingHouse": [
@@ -593,6 +676,54 @@
   ],
   "books": [
     {
+      "id": 52,
+      "name": "ước được đi ngủ",
+      "thumbnailUrl": "",
+      "description": "",
+      "country": "",
+      "language": "VN",
+      "pageNumber": 0,
+      "releaseDate": null,
+      "ebookFileUrl": "blob:http://localhost:5173/4e41eb4b-8166-464f-9bb0-82c779cecdf4",
+      "weeklyViewCount": 0,
+      "lastWeekReset": null,
+      "PublishingHouseId": null,
+      "createdAt": "2026-04-26T17:48:51.743Z",
+      "updatedAt": "2026-04-26T17:48:51.743Z",
+      "authorId": 44,
+      "viewCount": 0,
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "blob:http://localhost:5173/2b0825cf-4215-4b0f-90cb-aa440bc38edb",
+      "copyrightFileUrl": "",
+      "submittedByUserId": 1,
+      "categoryId": 3,
+      "isHidden": false
+    },
+    {
+      "id": 51,
+      "name": "buồn ngủngủ",
+      "thumbnailUrl": "",
+      "description": "",
+      "country": "",
+      "language": "VN",
+      "pageNumber": 0,
+      "releaseDate": null,
+      "ebookFileUrl": "",
+      "weeklyViewCount": 0,
+      "lastWeekReset": null,
+      "PublishingHouseId": null,
+      "createdAt": "2026-04-26T17:39:43.111Z",
+      "updatedAt": "2026-04-26T17:39:43.111Z",
+      "authorId": 44,
+      "viewCount": 0,
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": "",
+      "submittedByUserId": 1,
+      "categoryId": 1,
+      "isHidden": false
+    },
+    {
       "id": 2,
       "name": "Cộng Hòa",
       "thumbnailUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/book/2_2.png",
@@ -609,7 +740,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 2,
       "viewCount": 17100,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 3,
@@ -628,7 +764,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 3,
       "viewCount": 25050,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 4,
@@ -647,7 +788,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 4,
       "viewCount": 33000,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 5,
@@ -666,7 +812,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 5,
       "viewCount": 40950,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 6,
@@ -685,7 +836,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 6,
       "viewCount": 48902,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 7,
@@ -704,7 +860,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 6,
       "viewCount": 56851,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 8,
@@ -723,7 +884,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 7,
       "viewCount": 64801,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 9,
@@ -742,7 +908,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 8,
       "viewCount": 72750,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 10,
@@ -761,7 +932,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 8,
       "viewCount": 2701,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 11,
@@ -780,7 +956,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 9,
       "viewCount": 10650,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 12,
@@ -799,7 +980,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 10,
       "viewCount": 18600,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 13,
@@ -818,7 +1004,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 11,
       "viewCount": 26550,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 14,
@@ -837,7 +1028,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 12,
       "viewCount": 34500,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 15,
@@ -856,7 +1052,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 10,
       "viewCount": 42450,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 16,
@@ -875,7 +1076,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 13,
       "viewCount": 50400,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 17,
@@ -894,7 +1100,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 14,
       "viewCount": 58350,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 18,
@@ -913,7 +1124,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 15,
       "viewCount": 66300,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 19,
@@ -932,7 +1148,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 16,
       "viewCount": 74250,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 20,
@@ -951,7 +1172,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 17,
       "viewCount": 4200,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 21,
@@ -970,7 +1196,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 18,
       "viewCount": 12150,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 22,
@@ -989,7 +1220,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 19,
       "viewCount": 20100,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 23,
@@ -1008,7 +1244,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 20,
       "viewCount": 28050,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 24,
@@ -1027,7 +1268,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 21,
       "viewCount": 36000,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 25,
@@ -1046,7 +1292,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 21,
       "viewCount": 43950,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 26,
@@ -1065,7 +1316,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 21,
       "viewCount": 51900,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 27,
@@ -1084,7 +1340,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 22,
       "viewCount": 59852,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 28,
@@ -1103,7 +1364,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 23,
       "viewCount": 67800,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 29,
@@ -1122,7 +1388,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 23,
       "viewCount": 75752,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 30,
@@ -1131,6 +1402,7 @@
       "description": "một câu chuyện xúc động về tình phụ tử, về những tổn thương, sự thấu hiểu và sức mạnh của tình yêu trong gia đình. Tác phẩm kể về hành trình người cha cùng con trai mắc bệnh hiểm nghèo đi dọc đất nước Hàn Quốc để thực hiện ước mơ cuối cùng của con.\nTrên hành trình ấy, những kỷ niệm, hối tiếc và tình yêu thương được khơi dậy, giúp hai cha con tìm thấy sự cảm thông và gắn kết sâu sắc hơn bao giờ hết.",
       "country": "Hàn Quốc",
       "language": "VN",
+      "pageNumber": 0,
       "releaseDate": 2000,
       "ebookFileUrl": "https://kaohtp.github.io/BTL_OOP/30.pdf",
       "weeklyViewCount": 0,
@@ -1140,7 +1412,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 23,
       "viewCount": 5700,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 31,
@@ -1159,7 +1436,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 24,
       "viewCount": 13650,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 32,
@@ -1178,7 +1460,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 25,
       "viewCount": 21600,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 33,
@@ -1197,7 +1484,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 26,
       "viewCount": 29550,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 34,
@@ -1216,7 +1508,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 27,
       "viewCount": 37500,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 35,
@@ -1235,7 +1532,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 28,
       "viewCount": 45450,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 36,
@@ -1254,7 +1556,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 29,
       "viewCount": 53400,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 37,
@@ -1273,7 +1580,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 30,
       "viewCount": 61350,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 38,
@@ -1292,7 +1604,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 31,
       "viewCount": 69300,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 39,
@@ -1311,7 +1628,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 32,
       "viewCount": 77250,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 40,
@@ -1330,7 +1652,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 33,
       "viewCount": 7200,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 41,
@@ -1349,7 +1676,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 34,
       "viewCount": 15150,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 42,
@@ -1368,7 +1700,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 35,
       "viewCount": 23100,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 43,
@@ -1387,7 +1724,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 36,
       "viewCount": 31050,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 44,
@@ -1406,7 +1748,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 37,
       "viewCount": 39000,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 45,
@@ -1425,7 +1772,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 38,
       "viewCount": 46950,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 46,
@@ -1444,7 +1796,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 39,
       "viewCount": 54900,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 47,
@@ -1463,7 +1820,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 40,
       "viewCount": 62850,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 48,
@@ -1482,7 +1844,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 41,
       "viewCount": 70800,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 49,
@@ -1501,7 +1868,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 42,
       "viewCount": 78755,
-      "approvalStatus": "APPROVED"
+      "approvalStatus": "APPROVED",
+      "audioFileUrl": "",
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     },
     {
       "id": 50,
@@ -1520,82 +1892,12 @@
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 43,
       "viewCount": 8700,
-      "approvalStatus": "APPROVED"
-    },
-    {
-      "id": 52,
-      "name": "Tội",
-      "thumbnailUrl": "",
-      "description": "hay",
-      "country": "",
-      "language": "VN",
-      "pageNumber": 0,
-      "releaseDate": null,
-      "ebookFileUrl": "blob:http://localhost:5174/f038e2c2-c651-470b-abd2-e7bd4a1719a6",
-      "weeklyViewCount": 0,
-      "lastWeekReset": null,
-      "PublishingHouseId": null,
-      "createdAt": "2026-04-26T10:29:04.021Z",
-      "updatedAt": "2026-04-26T10:45:10.310Z",
-      "authorId": 1,
-      "viewCount": 0,
       "approvalStatus": "APPROVED",
       "audioFileUrl": "",
-      "copyrightFileUrl": "",
-      "submittedByUserId": 4,
-      "submittedAt": "2026-04-26T10:29:04.021Z",
-      "categoryId": null,
-      "editedAt": "2026-04-26T10:42:09.593Z",
-      "approvedAt": "2026-04-26T10:45:10.310Z"
-    },
-    {
-      "id": 53,
-      "name": "woww",
-      "thumbnailUrl": "",
-      "description": "he",
-      "country": "",
-      "language": "VN",
-      "pageNumber": 0,
-      "releaseDate": null,
-      "ebookFileUrl": "blob:http://localhost:5174/3c58817c-e91d-44aa-a06b-fac99b0b5760",
-      "weeklyViewCount": 0,
-      "lastWeekReset": null,
-      "PublishingHouseId": null,
-      "createdAt": "2026-04-26T10:44:52.681Z",
-      "updatedAt": "2026-04-26T10:44:52.681Z",
-      "authorId": 1,
-      "viewCount": 0,
-      "approvalStatus": "PENDING",
-      "audioFileUrl": "blob:http://localhost:5174/1747dd04-8c56-4c3d-b766-b0898c45052f",
-      "copyrightFileUrl": "",
-      "submittedByUserId": 4,
-      "submittedAt": "2026-04-26T10:44:52.681Z",
-      "categoryId": null
-    },
-    {
-      "id": 54,
-      "name": "VPC",
-      "thumbnailUrl": "",
-      "description": "VPC",
-      "country": "",
-      "language": "VN",
-      "pageNumber": 0,
-      "releaseDate": null,
-      "ebookFileUrl": "blob:http://localhost:5173/9bab2e32-2792-4ac0-bd32-916f88aa81ac",
-      "weeklyViewCount": 0,
-      "lastWeekReset": null,
-      "PublishingHouseId": null,
-      "createdAt": "2026-04-26T12:12:00.603Z",
-      "updatedAt": "2026-04-26T12:13:23.599Z",
-      "authorId": 1,
-      "viewCount": 2,
-      "approvalStatus": "PENDING",
-      "audioFileUrl": "",
-      "copyrightFileUrl": "",
-      "submittedByUserId": 4,
-      "submittedAt": "2026-04-26T12:12:00.603Z",
-      "categoryId": null,
-      "editedAt": "2026-04-26T12:13:23.599Z"
+      "copyrightFileUrl": null,
+      "submittedByUserId": 0,
+      "categoryId": 0,
+      "isHidden": false
     }
   ],
   "audioChapter": [
@@ -2833,19 +3135,25 @@
     },
     {
       "id": 116,
-      "bookId": 54,
       "chapterNumber": 1,
-      "name": "Chương 1",
-      "duration": 15000,
-      "audiobookUrl": "https://crimson-voice-0636.dongducnguyen05.workers.dev/?fileId=10Fyw5ibjmyNe1u3BDu2bYpYBJqWGFtMu&version=fix_lan_cuoi"
+      "name": "chương 1",
+      "description": "",
+      "audiobookUrl": "blob:http://localhost:5173/2b0825cf-4215-4b0f-90cb-aa440bc38edb",
+      "duration": 120,
+      "bookId": 52,
+      "createdAt": "2026-04-26T17:48:51.743Z",
+      "updatedAt": "2026-04-26T17:48:51.743Z"
     },
     {
-      "id": 117,
-      "bookId": 54,
+      "id": 118,
       "chapterNumber": 2,
-      "name": "Chương 2",
-      "duration": 15000,
-      "audiobookUrl": "https://l.facebook.com/l.php?u=https%3A%2F%2Fcrimson-voice-0636.dongducnguyen05.workers.dev%2F%3FfileId%3D1TjQ8Y2zXsxmCLoYtq_gOr9SDI4crqGr2%26version%3Dfix_lan_cuoi%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExbE03S3ZDNExZUk00elo1b3NydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR6K56LoNlQyzClR1_ameqXzeepODzqOOoodtgOIfjeg0QJVBzDhwivPSvok8Q_aem_kSWUKstzg5c3zr6yslhbTg&h=AT3XBAcmohCSz-z8qh4cxm08zyRb2S2mFJrgdBMxzJUWv9o6Awct3YHeNEAon6TOogNdV7szp7bMBX9EzAm_dTjxN_I2svM23rDGnptp5w2WJ63DsBLH09_0OPCvzr_BU4mNoQ"
+      "name": "chương 2",
+      "description": "",
+      "audiobookUrl": "blob:http://localhost:5173/2b0825cf-4215-4b0f-90cb-aa440bc38edb",
+      "duration": 120,
+      "bookId": 52,
+      "createdAt": "2026-04-26T17:48:51.743Z",
+      "updatedAt": "2026-04-26T17:48:51.743Z"
     }
   ],
   "authorsOfBooks": [
@@ -3050,16 +3358,12 @@
       "BookId": 50
     },
     {
-      "BookId": 52,
-      "AuthorId": 1
+      "AuthorId": 44,
+      "BookId": 51
     },
     {
-      "BookId": 53,
-      "AuthorId": 1
-    },
-    {
-      "BookId": 54,
-      "AuthorId": 1
+      "AuthorId": 44,
+      "BookId": 52
     }
   ],
   "category": [
@@ -3285,18 +3589,17 @@
     {
       "BookId": 50,
       "CategoryId": 5
+    },
+    {
+      "BookId": 51,
+      "CategoryId": 1
+    },
+    {
+      "BookId": 52,
+      "CategoryId": 3
     }
   ],
   "listeningAudioBook": [
-    {
-      "id": 5,
-      "userId": 1,
-      "bookId": 54,
-      "audioTimeline": 0,
-      "isFinished": false,
-      "lastListenedAt": "2026-04-26T12:13:34.626Z",
-      "audioChapterId": 1
-    },
     {
       "id": 4,
       "userId": 1,
@@ -3326,33 +3629,15 @@
     },
     {
       "id": 1,
+      "userId": 1,
+      "bookId": 2,
       "audioTimeline": 0,
       "isFinished": false,
       "lastListenedAt": "2025-11-08 10:54:00",
-      "userId": 1,
-      "bookId": 2,
       "audioChapterId": 2
     }
   ],
   "comments": [
-    {
-      "id": 1,
-      "userId": 2,
-      "bookId": 10,
-      "rating": 5,
-      "title": "Tuyet tac!",
-      "content": "Mot cuon sach thay doi tu duy cua minh hoan toan.",
-      "createdAt": "2025-11-20"
-    },
-    {
-      "id": 2,
-      "userId": 2,
-      "bookId": 6,
-      "rating": 4.5,
-      "title": "Rat hay",
-      "content": "Bai hoc gian di nhung sau sac, nen doc.",
-      "createdAt": "2025-11-22"
-    },
     {
       "id": 3,
       "userId": 3,
