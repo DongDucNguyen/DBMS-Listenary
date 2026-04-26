@@ -593,25 +593,6 @@
   ],
   "books": [
     {
-      "id": 1,
-      "name": "Chính trị luận",
-      "thumbnailUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/book/1_1.png",
-      "description": "Chính trị luận (tiếng Hy Lạp: Politika) là một trong những tác phẩm triết học chính trị kinh điển của Aristotle, được viết khoảng năm 350 TCN trong thời gian ông giảng dạy tại học viện Lyceum ở Athens. Ra đời trong bối cảnh các thành bang Hy Lạp cổ đại đang suy yếu và khủng hoảng về chính trị – đạo đức, tác phẩm thể hiện nỗ lực của Aristotle trong việc tìm hiểu bản chất, mục tiêu và mô hình tổ chức lý tưởng của nhà nước. Gồm tám quyển, Chính trị luận bàn về nguồn gốc và mục đích của nhà nước, phân tích các hình thức chính thể như quân chủ, quý tộc, dân chủ; đồng thời nhấn mạnh vai trò của công dân, giáo dục và luật pháp trong việc duy trì trật tự và công bằng xã hội. Quan điểm nổi bật của tác phẩm là khẳng định “con người là sinh vật chính trị” (zoon politikon), chỉ có thể sống đúng bản chất khi tham gia vào đời sống cộng đồng. Với nội dung kết hợp giữa triết học, đạo đức và thực tiễn, Chính trị luận được xem là nền tảng đầu tiên của khoa học chính trị phương Tây, có ảnh hưởng sâu rộng đến tư tưởng chính trị – xã hội của nhân loại trong hơn hai thiên niên kỷ.\n",
-      "country": "Hy Lạp cổ đại",
-      "language": "VN",
-      "pageNumber": 446,
-      "releaseDate": null,
-      "ebookFileUrl": "https://kaohtp.github.io/BTL_OOP/1.pdf",
-      "weeklyViewCount": 0,
-      "lastWeekReset": null,
-      "PublishingHouseId": null,
-      "createdAt": "2025-11-08 10:00:00",
-      "updatedAt": "2025-11-08 10:00:00",
-      "authorId": 1,
-      "viewCount": 9150,
-      "approvalStatus": "APPROVED"
-    },
-    {
       "id": 2,
       "name": "Cộng Hòa",
       "thumbnailUrl": "https://raw.githubusercontent.com/Kaohtp/images-authors-books/refs/heads/main/book/2_2.png",
@@ -1519,7 +1500,7 @@
       "createdAt": "2025-11-08 10:00:00",
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 42,
-      "viewCount": 78751,
+      "viewCount": 78755,
       "approvalStatus": "APPROVED"
     },
     {
@@ -1543,39 +1524,6 @@
     }
   ],
   "audioChapter": [
-    {
-      "id": 1,
-      "chapterNumber": 1,
-      "name": "Bình minh trên Cảng Old Trafford",
-      "description": "Chương mở đầu giới thiệu bối cảnh hỗn loạn sau Đại Chiến Thế Giới Thứ Ba, nơi các thị trấn ven biển phải thích nghi với luật lệ của những băng đảng tàu ngầm.",
-      "audiobookUrl": "https://l.facebook.com/l.php?u=https%3A%2F%2Fcrimson-voice-0636.dongducnguyen05.workers.dev%2F%3FfileId%3D1FDSKWbx3q58gCcsoJXbQEfH3N15sRe3y%26version%3Dfix_lan_cuoi%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExbE03S3ZDNExZUk00elo1b3NydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR6K56LoNlQyzClR1_ameqXzeepODzqOOoodtgOIfjeg0QJVBzDhwivPSvok8Q_aem_kSWUKstzg5c3zr6yslhbTg&h=AT3XBAcmohCSz-z8qh4cxm08zyRb2S2mFJrgdBMxzJUWv9o6Awct3YHeNEAon6TOogNdV7szp7bMBX9EzAm_dTjxN_I2svM23rDGnptp5w2WJ63DsBLH09_0OPCvzr_BU4mNoQ",
-      "duration": 345,
-      "bookId": 1,
-      "createdAt": "2025-11-08 20:30:00",
-      "updatedAt": "2025-11-08 20:30:15"
-    },
-    {
-      "id": 2,
-      "chapterNumber": 2,
-      "name": "Lời nguyền của Kẻ Mù",
-      "description": "Nhân vật chính nhận được một lá thư nặc danh chứa đựng mật mã cổ xưa, dẫn anh ta đến một ngôi đền bị lãng quên dưới lòng đất của thành phố.",
-      "audiobookUrl": "https://l.facebook.com/l.php?u=https%3A%2F%2Fcrimson-voice-0636.dongducnguyen05.workers.dev%2F%3FfileId%3D1FDSKWbx3q58gCcsoJXbQEfH3N15sRe3y%26version%3Dfix_lan_cuoi%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExbE03S3ZDNExZUk00elo1b3NydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR6K56LoNlQyzClR1_ameqXzeepODzqOOoodtgOIfjeg0QJVBzDhwivPSvok8Q_aem_kSWUKstzg5c3zr6yslhbTg&h=AT3XBAcmohCSz-z8qh4cxm08zyRb2S2mFJrgdBMxzJUWv9o6Awct3YHeNEAon6TOogNdV7szp7bMBX9EzAm_dTjxN_I2svM23rDGnptp5w2WJ63DsBLH09_0OPCvzr_BU4mNoQ",
-      "duration": 512,
-      "bookId": 1,
-      "createdAt": "2025-11-08 20:35:00",
-      "updatedAt": "2025-11-08 20:35:40"
-    },
-    {
-      "id": 3,
-      "chapterNumber": 3,
-      "name": "Hợp đồng Sương mù",
-      "description": "Cuộc gặp gỡ bí mật giữa hai phe đối lập trong khu ổ chuột Mây Trắng. Quyết định được đưa ra sẽ thay đổi hoàn toàn cục diện chính trị của Vùng Đất Cát.",
-      "audiobookUrl": "https://l.facebook.com/l.php?u=https%3A%2F%2Fcrimson-voice-0636.dongducnguyen05.workers.dev%2F%3FfileId%3D1FDSKWbx3q58gCcsoJXbQEfH3N15sRe3y%26version%3Dfix_lan_cuoi%26fbclid%3DIwZXh0bgNhZW0CMTAAYnJpZBExbE03S3ZDNExZUk00elo1b3NydGMGYXBwX2lkEDIyMjAzOTE3ODgyMDA4OTIAAR6K56LoNlQyzClR1_ameqXzeepODzqOOoodtgOIfjeg0QJVBzDhwivPSvok8Q_aem_kSWUKstzg5c3zr6yslhbTg&h=AT3XBAcmohCSz-z8qh4cxm08zyRb2S2mFJrgdBMxzJUWv9o6Awct3YHeNEAon6TOogNdV7szp7bMBX9EzAm_dTjxN_I2svM23rDGnptp5w2WJ63DsBLH09_0OPCvzr_BU4mNoQ",
-      "duration": 488,
-      "bookId": 1,
-      "createdAt": "2025-11-08 20:40:00",
-      "updatedAt": "2025-11-08 20:41:02"
-    },
     {
       "id": 4,
       "chapterNumber": 1,
@@ -2811,10 +2759,6 @@
   ],
   "authorsOfBooks": [
     {
-      "AuthorId": 1,
-      "BookId": 1
-    },
-    {
       "AuthorId": 2,
       "BookId": 2
     },
@@ -3044,10 +2988,6 @@
   ],
   "categoriesOfBooks": [
     {
-      "BookId": 1,
-      "CategoryId": 3
-    },
-    {
       "BookId": 2,
       "CategoryId": 3
     },
@@ -3246,6 +3186,15 @@
   ],
   "listeningAudioBook": [
     {
+      "id": 4,
+      "userId": 1,
+      "bookId": 49,
+      "audioTimeline": 0,
+      "isFinished": false,
+      "lastListenedAt": "2026-04-26T09:18:48.073Z",
+      "audioChapterId": 1
+    },
+    {
       "id": 3,
       "userId": 2,
       "bookId": 27,
@@ -3318,15 +3267,6 @@
       "title": "Tham, y nghia",
       "content": "Giup minh song tich cuc hon.",
       "createdAt": "2025-12-01"
-    },
-    {
-      "id": 6,
-      "userId": 2,
-      "bookId": 1,
-      "rating": 5,
-      "title": "",
-      "content": "",
-      "createdAt": "2025-11-5"
     }
   ],
   "subscriptionPlans": [
@@ -3400,11 +3340,6 @@
       "id": 2,
       "userId": 2,
       "bookId": 6
-    },
-    {
-      "id": 4,
-      "userId": 2,
-      "bookId": 1
     }
   ]
 }

@@ -33,7 +33,7 @@ export class AuthorInfoPage {
       const bookIds = data.authorsOfBooks
         .filter(rel => rel.AuthorId === this.authorId)
         .map(rel => rel.BookId);
-      this.books = data.books.filter(b => bookIds.includes(b.id));
+      this.books = data.books.filter(b => bookIds.includes(b.id) && (!b.approvalStatus || b.approvalStatus === 'APPROVED'));
     }
     
     this.isLoading = false;

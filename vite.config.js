@@ -96,9 +96,205 @@ const mockDbApiPlugin = () => ({
           return;
         }
 
+        // Endpoint: Chỉnh sửa sách (PUT /api/books/:id/edit) → đưa về PENDING
+        if (req.method === 'PUT' && req.url.startsWith('/api/books/')) {
+          const parts = req.url.split('/');
+          if (parts[4] === 'edit') {
+            const bookId = parseInt(parts[3], 10);
+            const book = dbData.books.find(b => b.id === bookId);
+            if (book) {
+              // Cập nhật các trường được gửi lên
+              if (payload.name !== undefined) book.name = payload.name;
+              if (payload.description !== undefined) book.description = payload.description;
+              if (payload.country !== undefined) book.country = payload.country;
+              if (payload.language !== undefined) book.language = payload.language;
+              if (payload.pageNumber !== undefined) book.pageNumber = parseInt(payload.pageNumber) || 0;
+              if (payload.releaseDate !== undefined) book.releaseDate = payload.releaseDate;
+              if (payload.thumbnailUrl !== undefined) book.thumbnailUrl = payload.thumbnailUrl;
+              if (payload.ebookFileUrl !== undefined) book.ebookFileUrl = payload.ebookFileUrl;
+              if (payload.audioFileUrl !== undefined) book.audioFileUrl = payload.audioFileUrl;
+              if (payload.copyrightFileUrl !== undefined) book.copyrightFileUrl = payload.copyrightFileUrl;
+              if (payload.PublishingHouseId !== undefined) book.PublishingHouseId = payload.PublishingHouseId ? parseInt(payload.PublishingHouseId) : null;
+
+              // Cập nhật category nếu thay đổi
+              if (payload.categoryId !== undefined) {
+                book.categoryId = payload.categoryId ? parseInt(payload.categoryId) : null;
+                if (!dbData.categoriesOfBooks) dbData.categoriesOfBooks = [];
+                dbData.categoriesOfBooks = dbData.categoriesOfBooks.filter(r => r.BookId !== bookId);
+                if (payload.categoryId) {
+                  dbData.categoriesOfBooks.push({ BookId: bookId, CategoryId: parseInt(payload.categoryId) });
+                }
+              }
+
+              // Đưa về trạng thái PENDING để admin duyệt lại
+              book.approvalStatus = 'PENDING';
+              book.updatedAt = new Date().toISOString();
+              book.editedAt = new Date().toISOString();
+              // Xóa các trường duyệt cũ
+              delete book.approvedAt;
+              delete book.rejectedAt;
+              delete book.rejectionReason;
+
+              fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true, book }));
+              return;
+            }
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: 'Book not found' }));
+            return;
+          }
+        }
+
+        // Endpoint: Xóa sách (DELETE /api/books/:id) — yêu cầu mật khẩu
+        if (req.method === 'DELETE' && req.url.startsWith('/api/books/')) {
+          const parts = req.url.split('/');
+          const bookId = parseInt(parts[3], 10);
+
+          // Xác thực mật khẩu
+          const userId = parseInt(payload.userId, 10);
+          const password = payload.password;
+          const user = dbData.user.find(u => u.id === userId);
+
+          if (!user || user.encryptedPassword !== password) {
+            res.statusCode = 401;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: false, error: 'Mật khẩu không đúng' }));
+            return;
+          }
+
+          // Xóa sách
+          const bookIndex = dbData.books.findIndex(b => b.id === bookId);
+          if (bookIndex >= 0) {
+            dbData.books.splice(bookIndex, 1);
+            // Xóa quan hệ authorsOfBooks
+            if (dbData.authorsOfBooks) {
+              dbData.authorsOfBooks = dbData.authorsOfBooks.filter(r => r.BookId !== bookId);
+            }
+            // Xóa quan hệ categoriesOfBooks
+            if (dbData.categoriesOfBooks) {
+              dbData.categoriesOfBooks = dbData.categoriesOfBooks.filter(r => r.BookId !== bookId);
+            }
+            // Xóa audioChapter liên quan
+            if (dbData.audioChapter) {
+              dbData.audioChapter = dbData.audioChapter.filter(c => c.bookId !== bookId);
+            }
+            // Xóa comments liên quan
+            if (dbData.comments) {
+              dbData.comments = dbData.comments.filter(c => c.bookId !== bookId);
+            }
+            // Xóa favorites liên quan
+            if (dbData.userFavorites) {
+              dbData.userFavorites = dbData.userFavorites.filter(f => f.bookId !== bookId);
+            }
+            // Xóa listening history liên quan
+            if (dbData.listeningAudioBook) {
+              dbData.listeningAudioBook = dbData.listeningAudioBook.filter(h => h.bookId !== bookId);
+            }
+
+            fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: true }));
+            return;
+          }
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: 'Book not found' }));
+          return;
+        }
+
         // Endpoint: Tăng lượt view của Sách
         if (req.method === 'POST' && req.url.startsWith('/api/books/')) {
           const parts = req.url.split('/');
+
+          // POST /api/books/submit — Tác giả gửi sách mới (trạng thái PENDING)
+          if (parts[3] === 'submit') {
+            const newId = dbData.books.length > 0 ? Math.max(...dbData.books.map(b => b.id)) + 1 : 1;
+            const newBook = {
+              id: newId,
+              name: payload.name || 'Untitled',
+              thumbnailUrl: payload.thumbnailUrl || '',
+              description: payload.description || '',
+              country: payload.country || '',
+              language: payload.language || 'VN',
+              pageNumber: parseInt(payload.pageNumber) || 0,
+              releaseDate: payload.releaseDate || null,
+              ebookFileUrl: payload.ebookFileUrl || '',
+              weeklyViewCount: 0,
+              lastWeekReset: null,
+              PublishingHouseId: payload.PublishingHouseId ? parseInt(payload.PublishingHouseId) : null,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              authorId: parseInt(payload.authorId),
+              viewCount: 0,
+              approvalStatus: 'PENDING',
+              audioFileUrl: payload.audioFileUrl || '',
+              copyrightFileUrl: payload.copyrightFileUrl || '',
+              submittedByUserId: parseInt(payload.submittedByUserId) || null,
+              submittedAt: new Date().toISOString(),
+              categoryId: payload.categoryId ? parseInt(payload.categoryId) : null
+            };
+            dbData.books.push(newBook);
+
+            // Thêm vào categoriesOfBooks nếu có
+            if (payload.categoryId) {
+              if (!dbData.categoriesOfBooks) dbData.categoriesOfBooks = [];
+              dbData.categoriesOfBooks.push({
+                BookId: newId,
+                CategoryId: parseInt(payload.categoryId)
+              });
+            }
+
+            // Thêm vào authorsOfBooks
+            if (!dbData.authorsOfBooks) dbData.authorsOfBooks = [];
+            dbData.authorsOfBooks.push({
+              BookId: newId,
+              AuthorId: parseInt(payload.authorId)
+            });
+
+            fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: true, book: newBook }));
+            return;
+          }
+
+          // POST /api/books/:id/approve — Admin duyệt sách
+          if (parts[4] === 'approve') {
+            const bookId = parseInt(parts[3], 10);
+            const book = dbData.books.find(b => b.id === bookId);
+            if (book) {
+              book.approvalStatus = 'APPROVED';
+              book.updatedAt = new Date().toISOString();
+              book.approvedAt = new Date().toISOString();
+              fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true, book }));
+              return;
+            }
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: 'Book not found' }));
+            return;
+          }
+
+          // POST /api/books/:id/reject — Admin từ chối sách
+          if (parts[4] === 'reject') {
+            const bookId = parseInt(parts[3], 10);
+            const book = dbData.books.find(b => b.id === bookId);
+            if (book) {
+              book.approvalStatus = 'REJECTED';
+              book.updatedAt = new Date().toISOString();
+              book.rejectedAt = new Date().toISOString();
+              book.rejectionReason = payload.reason || '';
+              fs.writeFileSync(dbPath, JSON.stringify(dbData, null, 2));
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true, book }));
+              return;
+            }
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: 'Book not found' }));
+            return;
+          }
+
+          // POST /api/books/:id/view — Tăng lượt view
           if (parts[4] === 'view') {
             const bookId = parseInt(parts[3], 10);
             const book = dbData.books.find(b => b.id === bookId);
