@@ -1,0 +1,226 @@
+/* ──────────────────────────────────────────────
+   FONT FIX — Only set on body, let inheritance work naturally.
+   Font Awesome 6 sets font-family with !important on its own classes,
+   so we must NOT add div/span overrides that compete with it.
+   ────────────────────────────────────────────── */
+
+/* Smooth font rendering */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Set base font on body — inheritance flows down automatically */
+body {
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+}
+
+/* Headings & form elements must be explicit (some browsers don't inherit) */
+h1, h2, h3, h4, h5, h6,
+input, button, textarea, select {
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+}
+
+/* NOTE: <i> elements are intentionally NOT listed here.
+   Font Awesome 6 sets font-family: "Font Awesome 6 Free" with !important
+   on its own class selectors in all.min.css — this is sufficient. */
+
+
+/* ──────────────────────────────────────────────
+   AUDIO PLAYER MODAL
+   ────────────────────────────────────────────── */
+#book-detail-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+#book-detail-overlay.open {
+  opacity: 1; pointer-events: all;
+}
+
+#book-detail-modal {
+  background: var(--bg-panel-solid);
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  max-width: 960px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  transform: scale(0.9) translateY(30px);
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+#book-detail-overlay.open #book-detail-modal {
+  transform: scale(1) translateY(0);
+}
+
+/* Waveform animation */
+@keyframes wave1 { 0%,100%{height:8px} 50%{height:28px} }
+@keyframes wave2 { 0%,100%{height:14px} 50%{height:6px} }
+@keyframes wave3 { 0%,100%{height:20px} 50%{height:36px} }
+@keyframes wave4 { 0%,100%{height:10px} 50%{height:22px} }
+@keyframes wave5 { 0%,100%{height:30px} 50%{height:12px} }
+
+.waveform-bar { 
+  width: 4px; border-radius: 2px; 
+  background: linear-gradient(to top, var(--color-primary), var(--color-secondary));
+  animation: wave1 1.2s ease infinite;
+}
+.waveform-bar:nth-child(2) { animation-name: wave2; animation-delay: 0.1s; }
+.waveform-bar:nth-child(3) { animation-name: wave3; animation-delay: 0.2s; }
+.waveform-bar:nth-child(4) { animation-name: wave4; animation-delay: 0.3s; }
+.waveform-bar:nth-child(5) { animation-name: wave5; animation-delay: 0.4s; }
+.waveform-bar:nth-child(6) { animation-name: wave1; animation-delay: 0.5s; }
+.waveform-bar:nth-child(7) { animation-name: wave2; animation-delay: 0.15s; }
+
+.waveform-bar.paused { animation-play-state: paused; height: 8px !important; }
+
+/* Progress range input */
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%; height: 6px;
+  background: var(--glass-border);
+  border-radius: 3px; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 6px hsla(260,80%,60%,0.4);
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  border-radius: 3px;
+}
+
+/* Demo countdown ring */
+@keyframes ringCountdown {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: 188.5; }
+}
+.demo-ring circle.track {
+  fill: none; stroke: var(--glass-border); stroke-width: 4;
+}
+.demo-ring circle.progress {
+  fill: none; stroke: #ff6b35; stroke-width: 4;
+  stroke-dasharray: 188.5;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  transform: rotate(-90deg); transform-origin: center;
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* ──────────────────────────────────────────────
+   EXPLORE PAGE — HERO BANNER
+   ────────────────────────────────────────────── */
+.explore-hero {
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  min-height: 440px;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 4rem;
+}
+.explore-hero .hero-bg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: blur(10px) brightness(0.4);
+  transform: scale(1.06);
+}
+.explore-hero .hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg,rgba(5,5,20,0.97) 0%,rgba(5,5,20,0.6) 55%,transparent 100%);
+}
+.explore-hero .hero-content {
+  position: relative; z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 2.5rem;
+  padding: 3rem;
+  width: 100%;
+}
+
+/* Book card compact */
+.book-card-sm {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+}
+.book-card-sm:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg), 0 0 20px hsla(260,80%,60%,0.15);
+}
+.book-card-sm .cover-wrap {
+  position: relative; overflow: hidden;
+  aspect-ratio: 2/3;
+}
+.book-card-sm .cover-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.book-card-sm:hover .cover-wrap img { transform: scale(1.07); }
+.book-card-sm .cover-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%);
+  opacity: 0; transition: opacity 0.3s;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 1rem;
+}
+.book-card-sm:hover .cover-overlay { opacity: 1; }
+
+/* Section strip */
+.section-strip {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  margin-top: 3rem;
+}
+.section-strip h2 {
+  font-size: 1.5rem;
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.section-strip .accent-line {
+  width: 4px; height: 26px;
+  background: linear-gradient(to bottom, var(--color-primary), var(--color-secondary));
+  border-radius: 2px; flex-shrink: 0;
+}
+.section-strip .see-all {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  display: flex; align-items: center; gap: 4px;
+  text-decoration: none;
+  opacity: 0.8; transition: opacity 0.2s;
+}
+.section-strip .see-all:hover { opacity: 1; }
+
+/* Horizontal scroll grid */
+.books-hscroll {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.25rem;
+}
+@media (max-width: 1100px) {
+  .books-hscroll { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 800px) {
+  .books-hscroll { grid-template-columns: repeat(3, 1fr); }
+}
