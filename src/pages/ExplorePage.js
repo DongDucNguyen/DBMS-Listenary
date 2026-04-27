@@ -823,7 +823,14 @@ export class ExplorePage {
 
     const byViews  = [...this.books].sort((a,b) => this._views(b)-this._views(a));
     const featured = byViews.slice(0,5);
-    const byDate   = [...this.books].sort((a,b) => (parseInt(b.releaseDate)||0)-(parseInt(a.releaseDate)||0));
+    const byDate   = [...this.books].sort((a,b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (bTime !== aTime && !isNaN(bTime) && !isNaN(aTime)) {
+        return bTime - aTime;
+      }
+      return (parseInt(b.releaseDate)||0) - (parseInt(a.releaseDate)||0);
+    });
     const newest   = byDate.slice(0,6);
     const classics = byViews.slice(15,20);
     const viet     = this.books.filter(b => b.country==='Việt Nam').slice(0,5);

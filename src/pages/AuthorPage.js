@@ -62,9 +62,9 @@ export class AuthorPage {
       return `<span style="background:rgba(255,255,255,0.1);color:var(--text-muted);border:1px solid rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><i class="fa-solid fa-eye-slash" style="font-size:0.6rem;"></i>Đã ẩn</span>`;
     }
     const configs = {
-      'APPROVED': { bg: 'rgba(46,213,115,0.15)', color: '#2ed573', border: 'rgba(46,213,115,0.4)', icon: 'fa-check-circle', label: 'Đã duyệt' },
-      'PENDING': { bg: 'rgba(255,165,0,0.15)', color: '#ffa500', border: 'rgba(255,165,0,0.4)', icon: 'fa-clock', label: 'Chờ duyệt' },
-      'REJECTED': { bg: 'rgba(255,71,87,0.15)', color: '#ff4757', border: 'rgba(255,71,87,0.4)', icon: 'fa-times-circle', label: 'Từ chối' },
+      'APPROVED': { bg: 'rgba(46,213,115,0.15)', color: 'var(--color-success)', border: 'rgba(46,213,115,0.4)', icon: 'fa-check-circle', label: 'Đã duyệt' },
+      'PENDING': { bg: 'rgba(255,165,0,0.15)', color: 'var(--color-warning)', border: 'rgba(255,165,0,0.4)', icon: 'fa-clock', label: 'Chờ duyệt' },
+      'REJECTED': { bg: 'rgba(255,71,87,0.15)', color: 'var(--color-danger)', border: 'rgba(255,71,87,0.4)', icon: 'fa-times-circle', label: 'Từ chối' },
     };
     const c = configs[status] || configs['PENDING'];
     return `<span style="background:${c.bg};color:${c.color};border:1px solid ${c.border};padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;"><i class="fa-solid ${c.icon}" style="font-size:0.6rem;"></i>${c.label}</span>`;
@@ -76,7 +76,7 @@ export class AuthorPage {
         <div id="publish-modal" style="background:var(--bg-panel);border:1px solid var(--glass-border);border-radius:24px;width:95%;max-width:800px;max-height:90vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,0.5);animation:slideUp 0.4s cubic-bezier(0.22,1,0.36,1);">
           
           <!-- Header -->
-          <div style="padding:2rem 2.5rem 1.5rem;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-panel);z-index:10;border-radius:24px 24px 0 0;">
+          <div style="padding:2rem 2.5rem 1.5rem;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-panel-solid);z-index:10;border-radius:24px 24px 0 0;">
             <div>
               <h2 style="margin:0;font-size:1.4rem;font-family:'Playfair Display',serif;">
                 <i class="fa-solid fa-book-medical" style="color:var(--color-primary);margin-right:8px;"></i>
@@ -237,11 +237,11 @@ export class AuthorPage {
 
             <!-- Notice -->
             <div style="background:linear-gradient(135deg,rgba(255,165,0,0.08),rgba(255,107,53,0.08));border:1px solid rgba(255,165,0,0.25);border-radius:14px;padding:1rem 1.25rem;margin-bottom:2rem;display:flex;gap:0.75rem;align-items:flex-start;">
-              <i class="fa-solid fa-triangle-exclamation" style="color:#ffa500;font-size:1.1rem;margin-top:2px;flex-shrink:0;"></i>
+              <i class="fa-solid fa-triangle-exclamation" style="color:var(--color-warning);font-size:1.1rem;margin-top:2px;flex-shrink:0;"></i>
               <div>
                 <p style="font-size:0.82rem;font-weight:600;margin:0 0 0.25rem;color:var(--text-main);">Lưu ý quan trọng</p>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin:0;line-height:1.6;">
-                  Sau khi gửi, sách sẽ ở trạng thái <strong style="color:#ffa500;">Chờ duyệt (PENDING)</strong>. 
+                <p style="font-size:0.75rem;color:var(--text-main);margin:0;line-height:1.6;">
+                  Sau khi gửi, sách sẽ ở trạng thái <strong style="color:var(--color-warning);">Chờ duyệt (PENDING)</strong>. 
                   Quản trị viên sẽ xem xét nội dung và giấy tờ bản quyền trước khi phê duyệt hiển thị. 
                   Bạn sẽ nhận được thông báo khi sách được duyệt.
                 </p>
@@ -281,10 +281,10 @@ export class AuthorPage {
 
     container.innerHTML = `
       <!-- Author Profile Header -->
-      <div class="glass-panel" style="padding:2rem;display:flex;gap:2rem;align-items:center;margin-bottom:2rem;background:linear-gradient(135deg,hsla(260,50%,15%,0.7),hsla(320,50%,15%,0.7));">
+      <div class="glass-panel" style="padding:2rem;display:flex;gap:2rem;align-items:center;margin-bottom:2rem;background:var(--header-gradient);">
         <img src="${avatarUrl}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--color-primary);box-shadow:var(--shadow-glow);" />
         <div style="flex:1;">
-          <h2 style="margin-bottom:0.25rem;">${a.firstName} ${a.lastName}</h2>
+          <h2 style="margin-bottom:0.25rem;color:var(--text-main);">${a.firstName} ${a.lastName}</h2>
           <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:0.75rem;">${a.description ? a.description.substring(0,140) + '...' : ''}</p>
           <span style="background:var(--color-accent);color:#000;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;"><i class="fa-solid fa-pen-nib"></i> TÁC GIẢ</span>
         </div>
@@ -913,7 +913,7 @@ export class AuthorPage {
     return `
       <div id="edit-modal-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s ease;">
         <div id="edit-modal" style="background:var(--bg-panel);border:1px solid var(--glass-border);border-radius:24px;width:95%;max-width:800px;max-height:90vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,0.5);animation:slideUp 0.4s cubic-bezier(0.22,1,0.36,1);">
-          <div style="padding:2rem 2.5rem 1.5rem;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-panel);z-index:10;border-radius:24px 24px 0 0;">
+          <div style="padding:2rem 2.5rem 1.5rem;border-bottom:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-panel-solid);z-index:10;border-radius:24px 24px 0 0;">
             <div>
               <h2 style="margin:0;font-size:1.4rem;font-family:'Playfair Display',serif;">
                 <i class="fa-solid fa-pen-to-square" style="color:var(--color-accent);margin-right:8px;"></i>

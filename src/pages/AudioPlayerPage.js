@@ -58,6 +58,12 @@ export class AudioPlayerPage {
     document.getElementById('pdf-fullscreen-backdrop')?.remove();
     document.body.classList.remove('pdf-reader-lock');
     document.removeEventListener('keydown', this._handleKeydown);
+    const orphanPanel = document.getElementById('pdf-reader-panel');
+    if (orphanPanel && orphanPanel.parentNode === document.body) {
+      orphanPanel.remove();
+    }
+    const placeholder = document.getElementById('pdf-panel-placeholder');
+    if (placeholder) placeholder.remove();
   }
 
   async fetchData(bookId, mode) {
@@ -466,11 +472,10 @@ export class AudioPlayerPage {
   _attachEvents() {
     // Mode switches
     document.getElementById('mode-audio')?.addEventListener('click', () => {
+      if (this.pdfFullscreen) this._setPdfFullscreen(false);
       this.pdfMode = false;
-      this.pdfFullscreen = false;
       this.autoScroll = false;
       clearInterval(this.scrollTimer);
-      document.body.classList.remove('pdf-reader-lock');
       this._reRender();
     });
     document.getElementById('mode-split')?.addEventListener('click', () => {
@@ -580,19 +585,41 @@ export class AudioPlayerPage {
     const panel = document.getElementById('pdf-reader-panel');
     const btn = document.getElementById('pdf-fullscreen-btn');
     const label = document.getElementById('pdf-fullscreen-label');
+    const container = document.getElementById('player-main-layout');
 
     panel?.classList.toggle('is-fullscreen', this.pdfFullscreen);
     document.body.classList.toggle('pdf-reader-lock', this.pdfFullscreen);
 
     let backdrop = document.getElementById('pdf-fullscreen-backdrop');
-    if (this.pdfFullscreen && !backdrop) {
-      backdrop = document.createElement('div');
-      backdrop.id = 'pdf-fullscreen-backdrop';
-      backdrop.className = 'pdf-fullscreen-backdrop';
-      backdrop.addEventListener('click', () => this._setPdfFullscreen(false));
-      document.body.appendChild(backdrop);
-    } else if (!this.pdfFullscreen && backdrop) {
-      backdrop.remove();
+    if (this.pdfFullscreen) {
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'pdf-fullscreen-backdrop';
+        backdrop.className = 'pdf-fullscreen-backdrop';
+        backdrop.addEventListener('click', () => this._setPdfFullscreen(false));
+        document.body.appendChild(backdrop);
+      }
+      if (panel && panel.parentNode !== document.body) {
+        let placeholder = document.getElementById('pdf-panel-placeholder');
+        if (!placeholder) {
+          placeholder = document.createElement('div');
+          placeholder.id = 'pdf-panel-placeholder';
+          placeholder.style.display = 'none';
+          panel.parentNode.insertBefore(placeholder, panel);
+        }
+        document.body.appendChild(panel);
+      }
+    } else {
+      if (backdrop) backdrop.remove();
+      if (panel && panel.parentNode === document.body) {
+        const placeholder = document.getElementById('pdf-panel-placeholder');
+        if (placeholder && placeholder.parentNode) {
+          placeholder.parentNode.insertBefore(panel, placeholder);
+          placeholder.remove();
+        } else if (container) {
+          container.insertBefore(panel, container.firstChild);
+        }
+      }
     }
 
     if (btn) {

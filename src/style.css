@@ -19,11 +19,22 @@
   --color-primary-hover: hsl(var(--hue-primary), 80%, 55%);
   --color-secondary: hsl(var(--hue-secondary), 85%, 60%);
   --color-accent: hsl(var(--hue-accent), 90%, 50%);
+  
+  --color-warning: #d97706;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
 
   /* Glassmorphism */
   --glass-border: hsla(0, 0%, 100%, 0.5);
   --glass-shadow: 0 8px 32px 0 hsla(var(--hue-primary), 50%, 10%, 0.05);
   --glass-blur: blur(12px);
+  
+  /* Overlays & Controls */
+  --overlay-bg: rgba(255, 255, 255, 0.6);
+  --hero-overlay-start: rgba(250, 250, 252, 0.95);
+  --hero-overlay-mid: rgba(250, 250, 252, 0.75);
+  --range-track-bg: hsla(var(--hue-primary), 20%, 50%, 0.25);
+  --header-gradient: linear-gradient(135deg, hsla(var(--hue-primary), 80%, 95%, 0.8), hsla(var(--hue-secondary), 80%, 95%, 0.8));
 
   /* Shadows */
   --shadow-sm: 0 2px 4px hsla(var(--hue-primary), 30%, 10%, 0.05);
@@ -52,10 +63,20 @@
   --color-primary: hsl(var(--hue-primary), 80%, 65%);
   --color-primary-hover: hsl(var(--hue-primary), 80%, 75%);
   --color-secondary: hsl(var(--hue-secondary), 85%, 65%);
+  
+  --color-warning: #ffa500;
+  --color-success: #2ed573;
+  --color-danger: #ff4757;
 
   --glass-border: hsla(0, 0%, 100%, 0.08);
   --glass-shadow: 0 8px 32px 0 hsla(0, 0%, 0%, 0.4);
   --shadow-glow: 0 0 20px hsla(var(--hue-primary), 80%, 65%, 0.2);
+
+  --overlay-bg: rgba(0, 0, 0, 0.75);
+  --hero-overlay-start: rgba(5, 5, 20, 0.97);
+  --hero-overlay-mid: rgba(5, 5, 20, 0.6);
+  --range-track-bg: hsla(0, 0%, 100%, 0.08);
+  --header-gradient: linear-gradient(135deg, hsla(var(--hue-primary), 50%, 15%, 0.7), hsla(var(--hue-secondary), 50%, 15%, 0.7));
 }
 
 * {

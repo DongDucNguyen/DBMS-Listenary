@@ -31,7 +31,7 @@ input, button, textarea, select {
    ────────────────────────────────────────────── */
 #book-detail-overlay {
   position: fixed; inset: 0; z-index: 2000;
-  background: rgba(0,0,0,0.75);
+  background: var(--overlay-bg);
   backdrop-filter: blur(8px);
   display: flex; align-items: center; justify-content: center;
   padding: 1.5rem;
@@ -85,7 +85,7 @@ input, button, textarea, select {
 input[type=range] {
   -webkit-appearance: none;
   width: 100%; height: 6px;
-  background: var(--glass-border);
+  background: var(--range-track-bg);
   border-radius: 3px; outline: none; cursor: pointer;
 }
 input[type=range]::-webkit-slider-thumb {
@@ -137,7 +137,7 @@ input[type=range]::-webkit-slider-runnable-track {
 }
 .explore-hero .hero-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(105deg,rgba(5,5,20,0.97) 0%,rgba(5,5,20,0.6) 55%,transparent 100%);
+  background: linear-gradient(105deg, var(--hero-overlay-start) 0%, var(--hero-overlay-mid) 55%, transparent 100%);
 }
 .explore-hero .hero-content {
   position: relative; z-index: 1;

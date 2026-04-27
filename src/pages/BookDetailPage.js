@@ -243,6 +243,21 @@ export class BookDetailPage {
             <p style="font-size:0.9rem;line-height:1.85;color:var(--text-muted);white-space:pre-line;">${(b.description || '').trim()}</p>
           </div>
 
+          <!-- Copyright Section (Admin only) -->
+          ${(user && user.roleId === 1 && b.copyrightFileUrl) ? `
+            <div style="background:linear-gradient(135deg,rgba(255,165,0,0.08),rgba(255,107,53,0.08));border:1px dashed var(--color-warning);border-radius:18px;padding:1.75rem;margin-bottom:2rem;">
+              <h3 style="font-size:1rem;font-weight:700;margin-bottom:0.875rem;display:flex;align-items:center;gap:0.5rem;color:var(--color-warning);">
+                <i class="fa-solid fa-file-zipper"></i> Giấy tờ bản quyền (Admin Review)
+              </h3>
+              <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">
+                Tác giả đã cung cấp tệp đính kèm chứa các tài liệu xác minh bản quyền. Bạn cần kiểm tra trước khi phê duyệt sách.
+              </p>
+              <a href="${b.copyrightFileUrl}" download style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--color-warning);color:#fff;padding:0.75rem 1.5rem;border-radius:12px;font-size:0.9rem;font-weight:600;text-decoration:none;box-shadow:var(--shadow-md);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <i class="fa-solid fa-download"></i> Tải xuống giấy tờ (.zip/.rar)
+              </a>
+            </div>
+          ` : ''}
+
           <!-- Author info card -->
           ${auth ? `
             <div style="background:var(--bg-panel);border:1px solid var(--glass-border);border-radius:18px;padding:1.75rem;margin-bottom:2rem;display:flex;gap:1.5rem;align-items:flex-start;">

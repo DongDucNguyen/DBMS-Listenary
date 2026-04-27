@@ -1771,7 +1771,7 @@
       "createdAt": "2025-11-08 10:00:00",
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 38,
-      "viewCount": 46950,
+      "viewCount": 46951,
       "approvalStatus": "APPROVED",
       "audioFileUrl": "",
       "copyrightFileUrl": null,
@@ -1867,7 +1867,7 @@
       "createdAt": "2025-11-08 10:00:00",
       "updatedAt": "2025-11-08 10:00:00",
       "authorId": 42,
-      "viewCount": 78755,
+      "viewCount": 78758,
       "approvalStatus": "APPROVED",
       "audioFileUrl": "",
       "copyrightFileUrl": null,
@@ -3600,6 +3600,33 @@
     }
   ],
   "listeningAudioBook": [
+    {
+      "id": 7,
+      "userId": 1,
+      "bookId": 45,
+      "audioTimeline": 0,
+      "isFinished": false,
+      "lastListenedAt": "2026-04-27T03:03:54.499Z",
+      "audioChapterId": 1
+    },
+    {
+      "id": 6,
+      "userId": 4,
+      "bookId": 49,
+      "audioTimeline": 0,
+      "isFinished": false,
+      "lastListenedAt": "2026-04-27T02:28:00.393Z",
+      "audioChapterId": 1
+    },
+    {
+      "id": 5,
+      "userId": 2,
+      "bookId": 49,
+      "audioTimeline": 0,
+      "isFinished": false,
+      "lastListenedAt": "2026-04-27T02:02:55.257Z",
+      "audioChapterId": 1
+    },
     {
       "id": 4,
       "userId": 1,

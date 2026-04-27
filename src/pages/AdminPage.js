@@ -216,6 +216,77 @@ export class AdminPage {
     `;
   }
 
+  _buildAuthorsTab() {
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem;">
+        <div style="display:flex;align-items:center;gap:1.5rem;">
+          <h3 style="margin:0;"><i class="fa-solid fa-pen-nib" style="color:var(--color-accent);"></i> Thống kê tác giả
+            <span id="admin-author-count" style="font-size:0.75rem;font-weight:400;color:var(--text-muted);margin-left:8px;">${this.authors.length} tác giả</span>
+          </h3>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center;">
+          <input type="text" id="author-search" placeholder="Tìm theo tên tác giả..."
+            style="padding:0.5rem 1rem;border-radius:10px;border:1px solid var(--glass-border);background:var(--bg-main);color:var(--text-main);font-family:var(--font-sans);font-size:0.85rem;outline:none;min-width:260px;" />
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--glass-border);">
+              <th class="author-sort-header" data-sort="name" style="padding:0.875rem;text-align:left;color:var(--text-muted);font-size:0.82rem;font-weight:500;cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--text-muted)'">Tác giả <i class="fa-solid fa-sort" style="font-size:0.7rem;margin-left:4px;"></i></th>
+              <th class="author-sort-header" data-sort="books" style="padding:0.875rem;text-align:center;color:var(--text-muted);font-size:0.82rem;font-weight:500;cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--text-muted)'">Số tác phẩm <i class="fa-solid fa-sort" style="font-size:0.7rem;margin-left:4px;"></i></th>
+              <th class="author-sort-header" data-sort="views" style="padding:0.875rem;text-align:center;color:var(--text-muted);font-size:0.82rem;font-weight:500;cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--text-muted)'">Tổng lượt xem <i class="fa-solid fa-sort" style="font-size:0.7rem;margin-left:4px;"></i></th>
+              <th class="author-sort-header" data-sort="avgviews" style="padding:0.875rem;text-align:center;color:var(--text-muted);font-size:0.82rem;font-weight:500;cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--text-muted)'">Xem trung bình <i class="fa-solid fa-sort" style="font-size:0.7rem;margin-left:4px;"></i></th>
+              <th class="author-sort-header" data-sort="rating" style="padding:0.875rem;text-align:center;color:var(--text-muted);font-size:0.82rem;font-weight:500;cursor:pointer;transition:color 0.2s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--text-muted)'">Rating trung bình <i class="fa-solid fa-sort" style="font-size:0.7rem;margin-left:4px;"></i></th>
+              <th style="padding:0.875rem;text-align:right;color:var(--text-muted);font-size:0.82rem;font-weight:500;">Chi tiết</th>
+            </tr>
+          </thead>
+          <tbody id="admin-authors-tbody">
+            ${this.authors.map(author => {
+              const authorBooks = this.books.filter(b => b.authorId === author.id);
+              const totalViews = authorBooks.reduce((sum, b) => sum + (b.viewCount || b.weeklyViewCount || 0), 0);
+              const avgViews = authorBooks.length > 0 ? Math.round(totalViews / authorBooks.length) : 0;
+              
+              const authorComments = this.comments.filter(c => authorBooks.some(b => b.id === c.bookId));
+              const avgRating = authorComments.length > 0 ? (authorComments.reduce((sum, c) => sum + c.rating, 0) / authorComments.length).toFixed(1) : '–';
+              
+              const avatarUrl = author.imagineUrl || author.thumbnailUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent((author.firstName||'?')+'+')}&background=444&color=fff&size=64`;
+              const authorSubtext = author.username ? `@${author.username}` : (author.birthday || 'Tác giả');
+              
+              return `
+                <tr class="admin-author-row" 
+                    data-search="${this._escapeAttr(author.firstName + ' ' + author.lastName + ' ' + (author.username||'')).toLowerCase()}"
+                    data-name="${this._escapeAttr(author.firstName + ' ' + author.lastName).toLowerCase()}"
+                    data-books="${authorBooks.length}"
+                    data-views="${totalViews}"
+                    data-avgviews="${avgViews}"
+                    data-rating="${avgRating !== '–' ? parseFloat(avgRating) : 0}"
+                    style="border-bottom:1px solid rgba(255,255,255,0.04);transition:all 0.3s;" onmouseover="this.style.background='var(--bg-main)'" onmouseout="this.style.background='transparent'">
+                  <td style="padding:0.875rem;display:flex;align-items:center;gap:0.75rem;">
+                    <img src="${avatarUrl}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;" />
+                    <div>
+                      <div style="font-weight:600;font-size:0.9rem;">${author.firstName} ${author.lastName}</div>
+                      <div style="font-size:0.78rem;color:var(--text-muted);">${authorSubtext}</div>
+                    </div>
+                  </td>
+                  <td style="padding:0.875rem;text-align:center;font-size:0.9rem;font-weight:600;color:var(--color-primary);">${authorBooks.length}</td>
+                  <td style="padding:0.875rem;text-align:center;font-size:0.85rem;">${totalViews.toLocaleString()}</td>
+                  <td style="padding:0.875rem;text-align:center;font-size:0.85rem;">${avgViews.toLocaleString()}</td>
+                  <td style="padding:0.875rem;text-align:center;font-size:0.85rem;color:#ffd700;font-weight:600;">${avgRating !== '–' ? '<i class="fa-solid fa-star"></i> ' + avgRating : '–'}</td>
+                  <td style="padding:0.875rem;text-align:right;">
+                    <button class="btn-icon" onclick="window._openViewUserModal(${author.id})" style="width:30px;height:30px;font-size:0.75rem;color:var(--color-accent);" title="Xem chi tiết">
+                      <i class="fa-solid fa-address-card"></i>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
   _buildPendingTab() {
     const pendingBooks = this.books.filter(b => b.approvalStatus === 'PENDING');
     const rejectedBooks = this.books.filter(b => b.approvalStatus === 'REJECTED');
@@ -409,7 +480,7 @@ export class AdminPage {
     this.activeTab = tab;
     const content = document.getElementById('admin-tab-content');
     if (!content) return;
-    ['users', 'books', 'pending', 'comments'].forEach(t => {
+    ['users', 'books', 'pending', 'authors', 'comments'].forEach(t => {
       const btn = document.getElementById(`tab-${t}`);
       if (btn) {
         btn.style.borderBottom = t === tab ? '2px solid var(--color-primary)' : '2px solid transparent';
@@ -420,6 +491,7 @@ export class AdminPage {
     if (tab === 'users') content.innerHTML = this._buildUsersTab();
     else if (tab === 'books') content.innerHTML = this._buildBooksTab();
     else if (tab === 'pending') content.innerHTML = this._buildPendingTab();
+    else if (tab === 'authors') content.innerHTML = this._buildAuthorsTab();
     else content.innerHTML = this._buildCommentsTab();
     this._attachTabEvents();
   }
@@ -449,6 +521,62 @@ export class AdminPage {
       if (countEl) countEl.textContent = `${visible} sách`;
     };
     document.getElementById('book-search')?.addEventListener('input', applyBookSearch);
+
+    // Author search filter
+    const applyAuthorSearch = () => {
+      const q = (document.getElementById('author-search')?.value || '').toLowerCase();
+      const rows = document.querySelectorAll('.admin-author-row');
+      let visible = 0;
+      rows.forEach(row => {
+        const matchText = !q || (row.dataset.search && row.dataset.search.includes(q));
+        row.style.display = matchText ? '' : 'none';
+        if (matchText) visible++;
+      });
+      const countEl = document.getElementById('admin-author-count');
+      if (countEl) countEl.textContent = `${visible} tác giả`;
+    };
+    document.getElementById('author-search')?.addEventListener('input', applyAuthorSearch);
+
+    // Author sorting logic
+    let authorSortField = null;
+    let authorSortDir = -1; // -1 for descending, 1 for ascending
+    document.querySelectorAll('.author-sort-header').forEach(th => {
+      th.addEventListener('click', () => {
+        const field = th.dataset.sort;
+        if (authorSortField === field) {
+          authorSortDir *= -1;
+        } else {
+          authorSortField = field;
+          authorSortDir = field === 'name' ? 1 : -1; // Default: asc for name, desc for numbers
+        }
+        
+        // Reset and update icons
+        document.querySelectorAll('.author-sort-header i').forEach(icon => {
+          icon.className = 'fa-solid fa-sort';
+          icon.style.color = 'var(--text-muted)';
+        });
+        const currentIcon = th.querySelector('i');
+        currentIcon.className = authorSortDir === 1 ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down';
+        currentIcon.style.color = 'var(--color-primary)';
+
+        const tbody = document.getElementById('admin-authors-tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('.admin-author-row'));
+        rows.sort((a, b) => {
+          let valA = a.dataset[field];
+          let valB = b.dataset[field];
+          
+          if (field === 'name') {
+            return valA.localeCompare(valB) * authorSortDir;
+          } else {
+            return (parseFloat(valA) - parseFloat(valB)) * authorSortDir;
+          }
+        });
+        
+        // Append sorted rows (moves them in the DOM)
+        rows.forEach(r => tbody.appendChild(r));
+      });
+    });
 
     // Comment search + filter
     const applyCommentFilters = () => {
@@ -1427,7 +1555,7 @@ export class AdminPage {
           </div>
           <div><p style="color:var(--text-muted);font-size:0.8rem;">Chờ duyệt</p><h3 style="margin:0;font-size:1.7rem;" id="pending-stat-count">${pendingCount}</h3></div>
         </div>
-        <div class="glass-card" style="padding:1.5rem;display:flex;align-items:center;gap:1rem;">
+        <div class="glass-card" style="padding:1.5rem;display:flex;align-items:center;gap:1rem;cursor:pointer;" onclick="window._adminSwitchTab('authors')">
           <div style="width:52px;height:52px;border-radius:14px;background:hsla(190,90%,50%,0.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--color-accent);flex-shrink:0;"><i class="fa-solid fa-pen-nib"></i></div>
           <div><p style="color:var(--text-muted);font-size:0.8rem;">Tác giả</p><h3 style="margin:0;font-size:1.7rem;">${this.authors.length}</h3></div>
         </div>
@@ -1446,6 +1574,7 @@ export class AdminPage {
             Duyệt sách
             ${pendingCount > 0 ? `<span style="background:#ff4757;color:#fff;font-size:0.62rem;font-weight:800;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;">${pendingCount}</span>` : ''}
           </button>
+          <button id="tab-authors" style="background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);padding:0.5rem 0;font-size:0.95rem;font-weight:500;font-family:var(--font-sans);cursor:pointer;">Tác giả</button>
           <button id="tab-comments" style="background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);padding:0.5rem 0;font-size:0.95rem;font-weight:500;font-family:var(--font-sans);cursor:pointer;">Bình luận</button>
         </div>
         <div id="admin-tab-content">
