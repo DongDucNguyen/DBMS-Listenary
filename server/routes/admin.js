@@ -10,6 +10,27 @@ router.get('/authors', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── GET /api/admin/books — TẤT CẢ sách (kể cả ẩn, pending) ──
+router.get('/books', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT b.id AS bookId, b.name AS bookName, b.description, b.thumbnailUrl,
+             b.country, b.language, b.pageNumber, b.releaseDate,
+             b.ebookFileUrl, b.audioFileUrl, b.copyrightFileUrl,
+             b.viewCount, b.weeklyViewCount, b.isHidden,
+             b.approvalStatus, b.submittedByUserId, b.createdAt, b.updatedAt,
+             a.id AS authorId, CONCAT(a.firstName,' ',a.lastName) AS authorFullName
+      FROM books b
+      LEFT JOIN authorsofbooks aob ON aob.BookId = b.id
+      LEFT JOIN author a ON a.id = aob.AuthorId
+      ORDER BY b.createdAt DESC
+    `);
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
+
 // ── GET /api/admin/pending — Sách chờ duyệt ─────────────────
 router.get('/pending', async (req, res) => {
   try {

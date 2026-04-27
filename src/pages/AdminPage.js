@@ -15,9 +15,9 @@ export class AdminPage {
   async fetchData() {
     try {
       // Lấy song song từ MySQL backend
-      const [usersRaw, booksRaw, pendingRaw, authorStatsRaw, commentsRaw] = await Promise.all([
+      const [usersRaw, adminBooksRaw, pendingRaw, authorStatsRaw, commentsRaw] = await Promise.all([
         ApiService.getAdminUsers(),
-        ApiService.getAllBooks(),
+        ApiService.getAdminAllBooks(),   // Lấy TẤT CẢ sách (kể cả ẩn)
         ApiService.getPendingBooks(),
         ApiService.getAuthorStats(),
         ApiService.getAllComments(),
@@ -27,17 +27,16 @@ export class AdminPage {
         ...u, id: u.userId || u.id,
       })) : [];
 
-      // Kết hợp sách đã duyệt + chờ duyệt
-      const approved = Array.isArray(booksRaw) ? booksRaw.map(b => ({
+      // Dùng admin/books (đã có đủ mọi trạng thái), bổ sung pending nếu thiếu
+      const adminBooks = Array.isArray(adminBooksRaw) ? adminBooksRaw.map(b => ({
         ...b, id: b.bookId || b.id, name: b.bookName || b.name,
       })) : [];
       const pending = Array.isArray(pendingRaw) ? pendingRaw.map(b => ({
         ...b, id: b.bookId || b.id, name: b.bookName || b.name,
         approvalStatus: 'PENDING',
       })) : [];
-      // Gộp, tránh duplicate
-      const allIds = new Set(approved.map(b => b.id));
-      this.books = [...approved, ...pending.filter(b => !allIds.has(b.id))];
+      const allIds = new Set(adminBooks.map(b => b.id));
+      this.books = [...adminBooks, ...pending.filter(b => !allIds.has(b.id))];
 
       this.authorStats = Array.isArray(authorStatsRaw) ? authorStatsRaw : [];
       // Tạo this.authors để các helper tương thích
@@ -65,7 +64,11 @@ export class AdminPage {
         { id: 2, name: 'ROLE_USER' },
         { id: 3, name: 'ROLE_AUTHOR' },
       ];
-      this.categories = [];
+
+      // Lấy danh sách thể loại từ MySQL
+      const categoriesRaw = await ApiService.getCategories().catch(() => []);
+      this.categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
+
       this.userSubscriptions = [];
     } catch (err) {
       console.error('AdminPage fetchData error:', err);
@@ -425,7 +428,7 @@ export class AdminPage {
                           ${book.submittedAt ? ` · <i class="fa-regular fa-clock" style="margin-right:3px;"></i>${new Date(book.submittedAt).toLocaleDateString('vi-VN')}` : ''}
                         </div>
                         <!-- Action buttons -->
-                        <div style="display:flex;gap:0.5rem;">
+                        <div class="pending-action-btns" style="display:flex;gap:0.5rem;">
                           <a href="#book?id=${book.id}" class="btn view-book-btn"
                             style="background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.3);color:var(--color-primary);padding:6px 16px;border-radius:10px;font-size:0.78rem;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:5px;transition:all 0.2s;font-family:var(--font-sans);"
                             onmouseover="this.style.background='var(--color-primary)';this.style.color='#fff'"
@@ -829,28 +832,43 @@ export class AdminPage {
           });
           const result = await res.json();
           if (result.success) {
+            // Cập nhật local state
+            const book = this.books.find(b => b.id === bookId);
+            if (book) book.approvalStatus = 'REJECTED';
+
+            // Cập nhật card UI: đổi màu và badge, KHÔNG xóa card
             const card = document.getElementById(`pending-book-${bookId}`);
             if (card) {
               card.style.transition = 'all 0.5s ease';
               card.style.borderColor = 'rgba(255,71,87,0.5)';
               card.style.background = 'rgba(255,71,87,0.06)';
-              card.querySelector('.reject-book-btn').outerHTML = `
-                <span style="color:#ff4757;font-size:0.82rem;font-weight:700;display:flex;align-items:center;gap:4px;">
-                  <i class="fa-solid fa-times-circle"></i> Đã từ chối
-                </span>
-              `;
-              const approveBtn = card.querySelector('.approve-book-btn');
-              if (approveBtn) approveBtn.remove();
-              
-              setTimeout(() => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateX(30px)';
-                setTimeout(() => card.remove(), 400);
-              }, 1500);
+
+              // Đổi badge trạng thái trong card
+              const statusBadge = card.querySelector('.admin-status-badge');
+              if (statusBadge) {
+                statusBadge.outerHTML = this._statusBadge('REJECTED');
+              }
+
+              // Xóa nút Duyệt & Từ chối, thêm label
+              const actionsDiv = card.querySelector('.pending-action-btns');
+              if (actionsDiv) {
+                actionsDiv.innerHTML = `
+                  <span style="color:#ff4757;font-size:0.82rem;font-weight:700;display:flex;align-items:center;gap:4px;padding:6px 16px;">
+                    <i class="fa-solid fa-times-circle"></i> Đã từ chối${reason ? `: ${reason}` : ''}
+                  </span>
+                `;
+              } else {
+                // Fallback: tìm nút reject và thay thế
+                btn.outerHTML = `
+                  <span style="color:#ff4757;font-size:0.82rem;font-weight:700;display:flex;align-items:center;gap:4px;">
+                    <i class="fa-solid fa-times-circle"></i> Đã từ chối
+                  </span>
+                `;
+                const approveBtn = card.querySelector('.approve-book-btn');
+                if (approveBtn) approveBtn.remove();
+              }
             }
-            const book = this.books.find(b => b.id === bookId);
-            if (book) book.approvalStatus = 'REJECTED';
-            
+
             this._updatePendingCount();
             this._toast('Đã từ chối sách!', 'success');
           } else {

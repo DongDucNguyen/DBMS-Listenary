@@ -13,4 +13,4 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 SELECT id, username FROM user ORDER BY id;
 SELECT AUTO_INCREMENT FROM information_schema.TABLES 
-WHERE TABLE_NAME='user' AND TABLE_SCHEMA='dbms_listenary';
+WHERE TABLE_NAME='user' AND TABLE_SCHEMA='DBMS_Listenary';

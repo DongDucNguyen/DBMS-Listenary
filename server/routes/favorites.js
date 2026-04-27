@@ -27,12 +27,11 @@ router.delete('/:userId/:bookId', async (req, res) => {
 router.get('/:userId', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT b.bookId AS bookId, b.bookName AS bookName, b.thumbnailUrl,
-              b.authorFullName
+      `SELECT b.bookId, b.bookName, b.thumbnailUrl,
+              b.authorFullName, b.approvalStatus, b.viewCount
        FROM userfavorites f
        JOIN vw_BookDetails b ON b.bookId = f.bookId
-       WHERE f.userId = ?
-       GROUP BY b.bookId`, [req.params.userId]
+       WHERE f.userId = ?`, [req.params.userId]
     );
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }

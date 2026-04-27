@@ -1,9 +1,9 @@
 -- ============================================================
--- PHASE 1A: VIEWS - dbms_listenary
--- Chạy file này trong MySQL Workbench (schema: dbms_listenary)
+-- PHASE 1A: VIEWS - DBMS_Listenary
+-- Chạy file này trong MySQL Workbench (schema: DBMS_Listenary)
 -- ============================================================
 
-USE dbms_listenary;
+USE DBMS_Listenary;
 
 -- ─────────────────────────────────────────────────────────────
 -- VIEW 1: vw_BookDetails
@@ -260,10 +260,10 @@ LEFT JOIN author a           ON a.id = aob.AuthorId
 LEFT JOIN audiochapter ac    ON ac.id = lab.audioChapterId
 ORDER BY lab.lastListenedAt DESC;
 -- ============================================================
--- PHASE 1B: STORED PROCEDURES - dbms_listenary
+-- PHASE 1B: STORED PROCEDURES - DBMS_Listenary
 -- ============================================================
 
-USE dbms_listenary;
+USE DBMS_Listenary;
 DELIMITER $$
 
 -- ─────────────────────────────────────────────────────────────
@@ -579,10 +579,10 @@ END $$
 
 DELIMITER ;
 -- ============================================================
--- PHASE 1C: TRIGGERS - dbms_listenary
+-- PHASE 1C: TRIGGERS - DBMS_Listenary
 -- ============================================================
 
-USE dbms_listenary;
+USE DBMS_Listenary;
 DELIMITER $$
 
 -- ─────────────────────────────────────────────────────────────
@@ -784,7 +784,7 @@ DELIMITER ;
 -- DB_HOST=localhost
 -- DB_USER=root
 -- DB_PASS=your_password
--- DB_NAME=dbms_listenary
+-- DB_NAME=DBMS_Listenary
 -- PORT=3001
 
 -- ============================================================
@@ -958,3 +958,161 @@ app.listen(process.env.PORT || 3001, () => {
   console.log(`Server chạy trên cổng ${process.env.PORT || 3001}`);
 });
 */
+
+-- ============================================================
+-- PHASE 1D: BỔ SUNG CÁC VIEW, PROCEDURE, TRIGGER MỚI
+-- ============================================================
+
+USE DBMS_Listenary;
+
+-- ─────────────────────────────────────────────────────────────
+-- VIEW 8: vw_UserFavoriteBooks
+-- Mục đích: Lấy chi tiết danh sách sách yêu thích của từng User
+-- Dùng cho: UserPage tab "Yêu thích" 
+-- ─────────────────────────────────────────────────────────────
+CREATE OR REPLACE VIEW vw_UserFavoriteBooks AS
+SELECT 
+    uf.userId,
+    uf.bookId,
+    b.name                                      AS bookName,
+    b.thumbnailUrl,
+    b.viewCount,
+    b.approvalStatus,
+    a.id                                        AS authorId,
+    CONCAT(a.firstName, ' ', a.lastName)        AS authorFullName,
+    ROUND(AVG(cm.rating), 1)                    AS avgRating
+FROM userfavorites uf
+JOIN books b                 ON b.id = uf.bookId
+LEFT JOIN authorsofbooks aob ON aob.BookId = b.id
+LEFT JOIN author a           ON a.id = aob.AuthorId
+LEFT JOIN comments cm        ON cm.bookId = b.id
+WHERE b.approvalStatus = 'APPROVED' AND b.isHidden = FALSE
+GROUP BY 
+    uf.userId, uf.bookId, 
+    b.id, b.name, b.thumbnailUrl, b.viewCount, b.approvalStatus, 
+    a.id, a.firstName, a.lastName;
+
+-- ─────────────────────────────────────────────────────────────
+-- VIEW 9: vw_PlatformDashboard
+-- Mục đích: Thống kê tổng quan toàn nền tảng cho trang Admin
+-- ─────────────────────────────────────────────────────────────
+CREATE OR REPLACE VIEW vw_PlatformDashboard AS
+SELECT 
+    (SELECT COUNT(*) FROM books)                                    AS totalBooks,
+    (SELECT COUNT(*) FROM user WHERE roleId = 2)                    AS totalUsers,
+    (SELECT COUNT(*) FROM author)                                   AS totalAuthors,
+    (SELECT COUNT(*) FROM books WHERE approvalStatus = 'PENDING')   AS totalPendingBooks,
+    (SELECT COALESCE(SUM(viewCount), 0) FROM books)                 AS totalSystemViews,
+    (SELECT COUNT(*) FROM comments)                                 AS totalComments;
+
+DELIMITER $$
+
+-- ─────────────────────────────────────────────────────────────
+-- PROCEDURE 9: sp_EditBook
+-- Mục đích: Tác giả cập nhật sách. Tự động chuyển về PENDING.
+-- ─────────────────────────────────────────────────────────────
+DROP PROCEDURE IF EXISTS sp_EditBook $$
+CREATE PROCEDURE sp_EditBook(
+    IN p_bookId         INT,
+    IN p_userId         INT, 
+    IN p_name           VARCHAR(500),
+    IN p_description    TEXT,
+    IN p_thumbnailUrl   TEXT,
+    OUT p_message       VARCHAR(255)
+)
+BEGIN
+    DECLARE v_ownerId INT;
+    
+    SELECT submittedByUserId INTO v_ownerId FROM books WHERE id = p_bookId;
+    
+    IF v_ownerId != p_userId THEN
+        SET p_message = 'ERROR: Bạn không có quyền chỉnh sửa cuốn sách này.';
+    ELSE
+        UPDATE books 
+        SET name            = p_name,
+            description     = p_description,
+            thumbnailUrl    = p_thumbnailUrl,
+            approvalStatus  = 'PENDING',
+            updatedAt       = NOW()
+        WHERE id = p_bookId;
+        
+        SET p_message = 'SUCCESS: Sách đã được cập nhật thành công và tự động ở trạng thái chờ duyệt.';
+    END IF;
+END $$
+
+-- ─────────────────────────────────────────────────────────────
+-- PROCEDURE 10: sp_DeleteBook
+-- Mục đích: Xóa sách cùng dữ liệu liên kết. 
+-- ─────────────────────────────────────────────────────────────
+DROP PROCEDURE IF EXISTS sp_DeleteBook $$
+CREATE PROCEDURE sp_DeleteBook(
+    IN p_bookId     INT,
+    IN p_userId     INT,
+    IN p_roleId     INT,   -- ROLE_ADMIN(1) xóa được mọi sách
+    OUT p_message   VARCHAR(255)
+)
+BEGIN
+    DECLARE v_ownerId INT;
+    SELECT submittedByUserId INTO v_ownerId FROM books WHERE id = p_bookId;
+    
+    IF v_ownerId != p_userId AND p_roleId != 1 THEN
+        SET p_message = 'ERROR: Bạn không có quyền xóa cuốn sách này.';
+    ELSE
+        DELETE FROM listeningaudiobook WHERE bookId = p_bookId;
+        DELETE FROM comments           WHERE bookId = p_bookId;
+        DELETE FROM userfavorites      WHERE bookId = p_bookId;
+        DELETE FROM audiochapter       WHERE bookId = p_bookId;
+        DELETE FROM authorsofbooks     WHERE bookId = p_bookId;
+        DELETE FROM categoriesofbooks  WHERE bookId = p_bookId;
+        DELETE FROM books WHERE id = p_bookId;
+        
+        SET p_message = 'SUCCESS: Sách và dữ liệu liên kết đính kèm đã bị xóa sạch.';
+    END IF;
+END $$
+
+-- ─────────────────────────────────────────────────────────────
+-- PROCEDURE 11: sp_ResetWeeklyViews
+-- Mục đích: Reset cột weeklyViewCount cho toàn bộ sách
+-- ─────────────────────────────────────────────────────────────
+DROP PROCEDURE IF EXISTS sp_ResetWeeklyViews $$
+CREATE PROCEDURE sp_ResetWeeklyViews(
+    OUT p_message VARCHAR(255)
+)
+BEGIN
+    UPDATE books SET weeklyViewCount = 0, updatedAt = NOW();
+    SET p_message = 'SUCCESS: Đã làm mới số lượt xem tuần (Trending Wipe).';
+END $$
+
+-- ─────────────────────────────────────────────────────────────
+-- TRIGGER 9: trg_AfterBookApproval
+-- Mục đích: Gán ngày phát hành khi sách được duyệt
+-- ─────────────────────────────────────────────────────────────
+DROP TRIGGER IF EXISTS trg_AfterBookApproval $$
+CREATE TRIGGER trg_AfterBookApproval
+BEFORE UPDATE ON books
+FOR EACH ROW
+BEGIN
+    IF OLD.approvalStatus = 'PENDING' AND NEW.approvalStatus = 'APPROVED' THEN
+        IF NEW.releaseDate IS NULL OR NEW.releaseDate = 0 THEN
+            SET NEW.releaseDate = YEAR(CURDATE());
+        END IF;
+    END IF;
+END $$
+
+-- ─────────────────────────────────────────────────────────────
+-- TRIGGER 10: trg_BeforeCommentInsert_CheckRate
+-- Mục đích: Lọc rating không hợp lệ trước khi đánh giá
+-- ─────────────────────────────────────────────────────────────
+DROP TRIGGER IF EXISTS trg_BeforeCommentInsert_CheckRate $$
+CREATE TRIGGER trg_BeforeCommentInsert_CheckRate
+BEFORE INSERT ON comments
+FOR EACH ROW
+BEGIN
+    IF NEW.rating > 5 THEN
+        SET NEW.rating = 5;
+    ELSEIF NEW.rating < 1 THEN
+        SET NEW.rating = 1;
+    END IF;
+END $$
+
+DELIMITER ;

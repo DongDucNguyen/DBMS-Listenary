@@ -30,6 +30,43 @@ router.get('/trending', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── GET /api/books/author/:userId — Tất cả sách của tác giả ──
+// (kể cả ẩn, PENDING, REJECTED — chỉ dùng nội bộ cho Author Dashboard)
+router.get('/author/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const [rows] = await pool.query(`
+      SELECT 
+        b.id AS bookId, b.name AS bookName, b.description, b.thumbnailUrl,
+        b.country, b.language, b.pageNumber, b.releaseDate,
+        b.ebookFileUrl, b.audioFileUrl, b.copyrightFileUrl,
+        b.viewCount, b.weeklyViewCount,
+        b.isHidden, b.approvalStatus,
+        b.submittedByUserId, b.createdAt, b.updatedAt,
+        a.id AS authorId,
+        CONCAT(a.firstName, ' ', a.lastName) AS authorFullName,
+        ROUND(AVG(cm.rating), 1) AS avgRating
+      FROM books b
+      LEFT JOIN authorsofbooks aob ON aob.BookId = b.id
+      LEFT JOIN author a           ON a.id = aob.AuthorId
+      LEFT JOIN user u             ON u.authorId = a.id
+      LEFT JOIN comments cm        ON cm.bookId = b.id
+      WHERE u.id = ? OR b.submittedByUserId = ?
+      GROUP BY
+        b.id, b.name, b.description, b.thumbnailUrl,
+        b.country, b.language, b.pageNumber, b.releaseDate,
+        b.ebookFileUrl, b.audioFileUrl, b.copyrightFileUrl,
+        b.viewCount, b.weeklyViewCount, b.isHidden, b.approvalStatus,
+        b.submittedByUserId, b.createdAt, b.updatedAt,
+        a.id, a.firstName, a.lastName
+      ORDER BY b.createdAt DESC
+    `, [userId, userId]);
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
+
 // ── GET /api/books/:id ───────────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {

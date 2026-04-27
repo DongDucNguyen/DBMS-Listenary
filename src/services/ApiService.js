@@ -27,6 +27,7 @@ export const ApiService = {
   getAllBooks()               { return _call('GET',  '/books'); },
   getNewestBooks(limit = 6)  { return _call('GET',  `/books/newest?limit=${limit}`); },
   getTrendingBooks(limit=20) { return _call('GET',  `/books/trending?limit=${limit}`); },
+  getMyBooks(userId)         { return _call('GET',  `/books/author/${userId}`); },
   getBook(id)                { return _call('GET',  `/books/${id}`); },
   getBookChapters(bookId)    { return _call('GET',  `/books/${bookId}/chapters`); },
   incrementView(bookId)      { return _call('POST', `/books/${bookId}/view`); },
@@ -35,6 +36,10 @@ export const ApiService = {
   rejectBook(id, adminId)    { return _call('POST', `/books/${id}/reject`,  { adminId }); },
   editBook(id, data)         { return _call('PUT',  `/books/${id}/edit`, data); },
   deleteBook(id, userId, password) { return _call('DELETE', `/books/${id}`, { userId, password }); },
+
+  // ─── CATEGORIES ─────────────────────────────────────────────────────
+  getCategories()            { return _call('GET',  '/categories'); },
+  getCategoriesBooks()       { return _call('GET',  '/categories/books'); },
 
   // ─── AUTH / USERS ───────────────────────────────────────────────────
   login(username, password)  { return _call('POST', '/auth/login',    { username, password }); },
@@ -53,6 +58,7 @@ export const ApiService = {
 
   // ─── ADMIN ──────────────────────────────────────────────────────────
   getAuthorStats()           { return _call('GET',  '/admin/authors'); },
+  getAdminAllBooks()         { return _call('GET',  '/admin/books'); },
   getPendingBooks()          { return _call('GET',  '/admin/pending'); },
   getAdminUsers()            { return _call('GET',  '/admin/users'); },
   createUser(data)           { return _call('POST', '/admin/users/create', data); },

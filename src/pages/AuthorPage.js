@@ -35,31 +35,23 @@ export class AuthorPage {
         description: myStats.authorBio,
       } : null;
 
-      // Lấy sách của tác giả từ MySQL
-      const booksRaw = await ApiService.getAllBooks();
-      const allBooks = Array.isArray(booksRaw) ? booksRaw.map(b => ({
-        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+      // Lấy TẤT CẢ sách của tác giả (kể cả ẩn, REJECTED, PENDING)
+      const myBooksRaw = await ApiService.getMyBooks(currentUser.id).catch(() => []);
+      this.authorBooks = Array.isArray(myBooksRaw) ? myBooksRaw.map(b => ({
+        ...b,
+        id: b.bookId || b.id,
+        name: b.bookName || b.name,
       })) : [];
 
-      // Lọc sách của tác giả hiện tại (authorId match)
-      this.authorBooks = allBooks.filter(b =>
-        b.authorId === currentUser.authorId || b.submittedByUserId === currentUser.id
-      );
+      this.allBooks = this.authorBooks; // dùng cho lookup
 
-      // Lấy pending books
-      const pendingRaw = await ApiService.getPendingBooks();
-      const pendingBooks = Array.isArray(pendingRaw) ? pendingRaw.map(b => ({
-        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
-        approvalStatus: 'PENDING',
-      })).filter(b => b.submittedByUserId === currentUser.id) : [];
 
-      // Kết hợp sách đã duyệt + chờ duyệt
-      const approvedIds = new Set(this.authorBooks.map(b => b.id));
-      this.authorBooks = [...this.authorBooks, ...pendingBooks.filter(b => !approvedIds.has(b.id))];
-
-      this.allBooks = allBooks;
       this.allUsers = [];
-      this.categories = [];
+
+      // Lấy danh sách thể loại từ MySQL
+      const categoriesRaw = await ApiService.getCategories().catch(() => []);
+      this.categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
+
       this.publishingHouses = [];
 
       // Lấy comments cho tất cả sách của tác giả

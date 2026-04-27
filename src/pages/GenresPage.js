@@ -36,12 +36,23 @@ export class GenresPage {
 
   async fetchData() {
     try {
-      const raw = await ApiService.getAllBooks();
-      this.books = Array.isArray(raw) ? raw.map(b => ({
+      const [booksRaw, categoriesRaw, catBooksRaw] = await Promise.all([
+        ApiService.getAllBooks(),
+        ApiService.getCategories(),
+        ApiService.getCategoriesBooks(),
+      ]);
+
+      this.books = Array.isArray(booksRaw) ? booksRaw.map(b => ({
         ...b, id: b.bookId || b.id, name: b.bookName || b.name,
       })) : [];
-      this.categories = [];
-      this.categoriesOfBooks = [];
+
+      // categories từ MySQL (id 1-5: Việt Nam, Nước ngoài, Đời sống, Giáo dục, Khác)
+      this.categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
+
+      // Liên kết sách ↔ thể loại (format: [{BookId, CategoryId}])
+      this.categoriesOfBooks = Array.isArray(catBooksRaw) ? catBooksRaw : [];
+
+      // Extra genre map (hard-coded legacy data)
       this.extraGenreBooks = {};
       Object.entries(EXTRA_GENRES).forEach(([key, ids]) => {
         this.extraGenreBooks[key] = ids;

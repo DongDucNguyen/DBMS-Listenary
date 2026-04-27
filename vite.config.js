@@ -779,8 +779,16 @@ const mockDbApiPlugin = () => ({
           }
         }
 
+        // Endpoint: Lấy danh sách thể loại
+        if (req.method === 'GET' && req.url === '/api/categories') {
+          const cats = dbData.category || [];
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(cats));
+          return;
+        }
+
         res.statusCode = 404;
-        res.end(JSON.stringify({ error: 'Endpoint not found' }));
+        res.end(JSON.stringify({ error: `Endpoint không tồn tại: ${req.method} ${req.url}` }));
       });
     });
   }

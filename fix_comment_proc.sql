@@ -1,4 +1,6 @@
-DROP PROCEDURE IF EXISTS sp_AddComment;
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS sp_AddComment $$
 
 CREATE PROCEDURE sp_AddComment(
   IN p_userId INT,
@@ -21,4 +23,6 @@ BEGIN
 
         SET p_message = 'SUCCESS: Đã thêm đánh giá thành công.';
     END IF;
-END
+END $$
+
+DELIMITER ;

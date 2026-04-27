@@ -14,6 +14,7 @@ app.use('/api/history',      require('./routes/history'));
 app.use('/api/comments',     require('./routes/comments'));
 app.use('/api/favorites',    require('./routes/favorites'));
 app.use('/api/subscription', require('./routes/subscription'));
+app.use('/api/categories',   require('./routes/categories'));
 
 // ── Health check ─────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'OK', time: new Date() }));

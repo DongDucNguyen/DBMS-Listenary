@@ -56,8 +56,14 @@ export class ExplorePage {
 
 
   _getAuthor(bookId) {
-    const rel = this.authorsOfBooks.find(r => r.BookId === bookId);
-    return rel ? this.authors.find(a => a.id === rel.AuthorId) : null;
+    // vw_BookDetails đã JOIN tác giả sẵn — dùng trực tiếp từ book object
+    const book = this.books.find(b => b.id === bookId);
+    if (!book) return null;
+    const firstName = book.authorFirstName || '';
+    const lastName  = book.authorLastName  || '';
+    const full      = book.authorFullName  || `${firstName} ${lastName}`.trim();
+    if (!full) return null;
+    return { firstName, lastName, fullName: full };
   }
 
   _getChapters(bookId) {
@@ -498,20 +504,21 @@ export class ExplorePage {
         padding:3rem;margin-bottom:4rem;text-align:center;
         background:linear-gradient(135deg,rgba(124,58,237,.15) 0%,rgba(236,72,153,.1) 100%);
         border:1px solid rgba(124,58,237,.2);">
-        <div style="position:absolute;inset:0;opacity:.05;background:radial-gradient(circle at 70% 50%,var(--color-primary),transparent 60%);"></div>
-        <i class="fa-solid fa-headphones-simple" style="font-size:3rem;color:var(--color-primary);margin-bottom:1rem;display:block;"></i>
-        <h3 style="margin-bottom:.5rem;font-size:1.2rem;">Đăng nhập để nghe không giới hạn</h3>
-        <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:400px;margin-left:auto;margin-right:auto;">
+        <div style="position:absolute;inset:0;opacity:.05;background:radial-gradient(circle at 70% 50%,var(--color-primary),transparent 60%);pointer-events:none;"></div>
+        <i class="fa-solid fa-headphones-simple" style="font-size:3rem;color:var(--color-primary);margin-bottom:1rem;display:block;position:relative;z-index:1;"></i>
+        <h3 style="margin-bottom:.5rem;font-size:1.2rem;position:relative;z-index:1;">Đăng nhập để nghe không giới hạn</h3>
+        <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;max-width:400px;margin-left:auto;margin-right:auto;position:relative;z-index:1;">
           Hơn ${this.books.length}+ tác phẩm đang chờ bạn. Tạo danh sách yêu thích, nghe lại lịch sử.
         </p>
-        <div style="display:flex;gap:.75rem;justify-content:center;">
-          <a href="#login"><button class="btn btn-primary" style="padding:.75rem 2rem;">
+        <div style="display:flex;gap:.75rem;justify-content:center;position:relative;z-index:1;">
+          <a href="#login" style="text-decoration:none;"><button class="btn btn-primary" style="padding:.75rem 2rem;cursor:pointer;">
             <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
           </button></a>
-          <a href="#explore"><button class="btn" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;padding:.75rem 2rem;">
-            <i class="fa-solid fa-compass"></i> Khám phá miễn phí
+          <a href="#genres" style="text-decoration:none;"><button class="btn" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;padding:.75rem 2rem;cursor:pointer;">
+            <i class="fa-solid fa-compass"></i> Khám phá thể loại
           </button></a>
         </div>
+
       </div>`;
 
     const history = this.readingHistory || [];
