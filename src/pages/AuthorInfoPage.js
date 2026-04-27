@@ -1,4 +1,5 @@
 import '../pages.css';
+import { ApiService } from '../services/ApiService.js';
 
 export class AuthorInfoPage {
   constructor() {
@@ -22,22 +23,37 @@ export class AuthorInfoPage {
       this._reRender();
       return;
     }
-    const res = await fetch('/database.json?t=' + Date.now());
-    const data = await res.json();
-    
-    // Find the author
-    this.author = data.author.find(a => a.id === this.authorId);
-    
-    // Find their books
-    if (this.author && data.authorsOfBooks) {
-      const bookIds = data.authorsOfBooks
-        .filter(rel => rel.AuthorId === this.authorId)
-        .map(rel => rel.BookId);
-      this.books = data.books.filter(b => bookIds.includes(b.id) && (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden);
+    try {
+      // Với vw_AuthorStats ta lấy info tác giả thông qua admin/authors
+      const stats = await ApiService.getAuthorStats();
+      const authorStat = Array.isArray(stats) ? stats.find(a => a.authorId === this.authorId) : null;
+      if (authorStat) {
+        this.author = {
+          id: authorStat.authorId,
+          firstName: authorStat.firstName,
+          lastName: authorStat.lastName,
+          imagineUrl: authorStat.imagineUrl,
+          description: authorStat.authorBio,
+          birthday: authorStat.birthday,
+        };
+      } else {
+        this.author = null;
+      }
+
+      // Lấy sách của tác giả
+      const booksRaw = await ApiService.getAllBooks();
+      const allBooks = Array.isArray(booksRaw) ? booksRaw.map(b => ({
+        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+      })) : [];
+      // Lọc sách theo authorId (vw_BookDetails có authorId)
+      this.books = allBooks.filter(b => b.authorId === this.authorId);
+    } catch (e) {
+      console.error('AuthorInfoPage fetchData error:', e);
+      this.author = null;
+    } finally {
+      this.isLoading = false;
+      this._reRender();
     }
-    
-    this.isLoading = false;
-    this._reRender();
   }
 
   _fmtViews(n) {

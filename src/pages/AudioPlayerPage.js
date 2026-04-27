@@ -1,5 +1,6 @@
 import { AuthService } from '../services/AuthService.js';
 import { audioPlayer } from '../services/AudioPlayerService.js';
+import { ApiService } from '../services/ApiService.js';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import '../explore.css';
 import '../player.css';
@@ -71,15 +72,14 @@ export class AudioPlayerPage {
     this.pdfMode = mode === 'pdf';
 
     try {
-      const res = await fetch('/database.json?t=' + Date.now());
-      const data = await res.json();
-
-      this.book = data.books.find(b => b.id === this.bookId);
+      // Lấy chi tiết sách từ MySQL (vw_BookDetails)
+      const book = await ApiService.getBook(this.bookId);
+      this.book = book ? { ...book, id: book.bookId || book.id, name: book.bookName || book.name } : null;
       if (!this.book) throw new Error('Not found');
 
       const user = AuthService.getUser();
       const isApproved = !this.book.approvalStatus || this.book.approvalStatus === 'APPROVED';
-      const isOwner = user && user.roleId === 3 && this.book.authorId === user.authorId;
+      const isOwner = user && user.roleId === 3 && this.book.submittedByUserId === user.id;
       const isAdmin = user && user.roleId === 1;
 
       if ((!isApproved || this.book.isHidden) && !isOwner && !isAdmin) {
@@ -87,12 +87,19 @@ export class AudioPlayerPage {
         throw new Error('Access denied: Book is pending approval or hidden.');
       }
 
-      const rel = (data.authorsOfBooks || []).find(r => r.BookId === this.bookId);
-      this.author = rel ? (data.author || []).find(a => a.id === rel.AuthorId) : null;
+      // Author từ view
+      this.author = {
+        id: book.authorId,
+        firstName: book.authorFirstName,
+        lastName: book.authorLastName,
+        imagineUrl: book.authorImageUrl,
+      };
 
-      this.chapters = (data.audioChapter || [])
-        .filter(c => c.bookId === this.bookId)
-        .sort((a, b) => a.chapterNumber - b.chapterNumber);
+      // Chapters từ MySQL
+      const chapters = await ApiService.getBookChapters(this.bookId);
+      this.chapters = Array.isArray(chapters)
+        ? chapters.sort((a, b) => a.chapterNumber - b.chapterNumber)
+        : [];
     } catch (e) {
       console.error('PlayerPage fetch error:', e);
     }

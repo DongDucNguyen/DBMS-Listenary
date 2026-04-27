@@ -2,6 +2,7 @@ import '../explore.css';
 import '../pages.css';
 import { AuthService } from '../services/AuthService.js';
 import { MockDbService } from '../services/MockDbService.js';
+import { ApiService } from '../services/ApiService.js';
 
 export class ExplorePage {
   constructor() {
@@ -18,26 +19,33 @@ export class ExplorePage {
 
   async fetchData() {
     try {
-      const res = await fetch('/database.json?t=' + Date.now());
-      const data = await res.json();
-      this.books = (data.books || []).filter(b => (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden);
-      this.authors = data.author || [];
-      this.authorsOfBooks = data.authorsOfBooks || [];
-      this.audioChapters = data.audioChapter || [];
-      
+      // Lấy tất cả sách đã duyệt từ MySQL qua vw_BookDetails
+      const books = await ApiService.getAllBooks();
+      this.books = Array.isArray(books) ? books.map(b => ({
+        ...b,
+        id: b.bookId || b.id,
+        name: b.bookName || b.name,
+        createdAt: b.bookCreatedAt || b.createdAt,
+      })) : [];
+
+      // Lấy lịch sử nghe của user hiện tại
       const currentUser = AuthService.getUser();
       if (currentUser) {
-        this.readingHistory = (data.listeningAudioBook || [])
-          .filter(h => h.userId === currentUser.id)
-          .sort((a, b) => new Date(b.lastListenedAt) - new Date(a.lastListenedAt))
-          .map(h => ({
+        try {
+          const history = await ApiService.getHistory(currentUser.id);
+          this.readingHistory = Array.isArray(history) ? history.map(h => ({
             bookId: h.bookId,
             progress: h.audioTimeline || 0,
-            lastListened: h.lastListenedAt
-          }));
+            lastListened: h.lastListenedAt,
+          })) : [];
+        } catch (_) { this.readingHistory = []; }
       } else {
         this.readingHistory = [];
       }
+
+      // authorsOfBooks dùng inline từ book data (vw_BookDetails đã JOIN)
+      this.authorsOfBooks = [];
+      this.authors = [];
     } catch (e) {
       console.error('ExplorePage fetch error:', e);
     } finally {
@@ -45,6 +53,7 @@ export class ExplorePage {
       this._reRender();
     }
   }
+
 
   _getAuthor(bookId) {
     const rel = this.authorsOfBooks.find(r => r.BookId === bookId);
@@ -69,7 +78,7 @@ export class ExplorePage {
 
   // ── Standard compact card ─────────────────────────────────────
   _card(book) {
-    const author = this._getAuthor(book.id);
+    const authorName = book.authorFullName || `${book.authorFirstName || ''} ${book.authorLastName || ''}`.trim();
     return `
       <div class="book-card-sm" style="min-width:155px;flex-shrink:0;" data-bookid="${book.id}">
         <div class="cover-wrap">
@@ -89,7 +98,7 @@ export class ExplorePage {
             display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
             line-height:1.35;font-family:'Outfit',sans-serif;">${book.name||''}</h4>
           <p style="font-size:.7rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            ${author ? `${author.firstName} ${author.lastName}` : (book.country||'')}
+            ${authorName || (book.country||'')}
           </p>
         </div>
       </div>`;
@@ -103,10 +112,11 @@ export class ExplorePage {
     const rankBgs = ['linear-gradient(135deg,#ffd700,#ffaa00)','linear-gradient(135deg,#b0b8c1,#8a9bb0)',
                      'linear-gradient(135deg,#cd873f,#a0621e)','rgba(255,255,255,.15)','rgba(255,255,255,.1)'];
     const rankTxt = ['#000','#000','#fff','#fff','#fff'];
-    const b0 = top5[0]; const a0 = this._getAuthor(b0.id);
+    const b0 = top5[0];
+    const a0Name = b0.authorFullName || `${b0.authorFirstName||''} ${b0.authorLastName||''}`.trim();
     const heroData = JSON.stringify(top5.map((b,i) => ({
       id:b.id, name:b.name, thumb:b.thumbnailUrl,
-      author:(()=>{const a=this._getAuthor(b.id);return a?`${a.firstName} ${a.lastName}`:''})(),
+      author: b.authorFullName || `${b.authorFirstName||''} ${b.authorLastName||''}`.trim(),
       desc:(b.description||'').slice(0,240), views:this._fmtViews(this._views(b)),
       country:b.country||'', rank:ranks[i], rankBg:rankBgs[i], rankTxt:rankTxt[i],
     })));
@@ -139,7 +149,7 @@ export class ExplorePage {
             <h1 id="hero-title" style="font-size:2.55rem;color:var(--text-main);font-family:'Playfair Display',serif;
               line-height:1.15;margin-bottom:.4rem;text-shadow:0 2px 24px rgba(0,0,0,.15);">${b0.name}</h1>
             <p id="hero-author" style="color:var(--color-secondary);font-size:.9rem;margin-bottom:.75rem;">
-              <i class="fa-solid fa-pen-nib" style="margin-right:5px;"></i>${a0?`${a0.firstName} ${a0.lastName}`:''}
+              <i class="fa-solid fa-pen-nib" style="margin-right:5px;"></i>${a0Name}
             </p>
             <p id="hero-desc" style="color:var(--text-muted);font-size:.87rem;line-height:1.75;
               max-width:500px;margin-bottom:1.6rem;
@@ -157,7 +167,7 @@ export class ExplorePage {
           </div>
           <div style="display:flex;flex-direction:column;gap:.5rem;margin-left:auto;flex-shrink:0;">
             <p style="font-size:.66rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:.25rem;">Top 5 nổi bật</p>
-            ${top5.map((b,i)=>{const a=this._getAuthor(b.id);return`
+            ${top5.map((b,i)=>{const authorN=b.authorFullName||`${b.authorFirstName||''} ${b.authorLastName||''}`.trim();return`
               <div id="hero-thumb-${i}" data-hi="${i}" class="hero-thumb-item"
                 style="display:flex;align-items:center;gap:.7rem;
                   background:${i===0?'var(--bg-main)':'var(--bg-panel)'};backdrop-filter:blur(12px);
@@ -167,7 +177,7 @@ export class ExplorePage {
                 <div style="overflow:hidden;flex:1;">
                   <div style="font-size:.76rem;font-weight:700;color:var(--text-main);
                     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">${b.name}</div>
-                  <div style="font-size:.64rem;color:var(--text-muted);margin-top:1px;">${a?`${a.firstName} ${a.lastName}`:''}</div>
+                  <div style="font-size:.64rem;color:var(--text-muted);margin-top:1px;">${authorN}</div>
                   <div style="margin-top:5px;height:2px;border-radius:1px;background:var(--glass-border);overflow:hidden;">
                     <div id="hero-bar-${i}" style="height:100%;border-radius:1px;background:var(--color-primary);width:0%;transition:width .12s linear;"></div>
                   </div>

@@ -1,90 +1,55 @@
 /**
- * MockDbService — Lưu trữ toàn bộ dữ liệu người dùng thay đổi vào localStorage
- * Thay thế cho server API thực khi chưa có backend.
- *
- * Các key trong localStorage:
- *   listenary_reading_history_{userId}  → [{ bookId, progress, lastListened, totalDuration }]
- *   listenary_view_counts               → { [bookId]: number }
- *   listenary_mock_comments             → Comment[]  (đã có)
- *   listenary_deleted_comments          → number[]   (đã có)
- *   listenary_favs_{userId}             → number[]   (đã có)
- *   listenary_favs_{userId}_meta        → [{bookId, addedAt}] (đã có)
+ * MockDbService — Giờ chuyển hướng tất cả sang ApiService (MySQL backend).
+ * Giữ nguyên interface để không cần sửa các trang đang dùng MockDbService.
  */
+import { ApiService } from './ApiService.js';
 
 export const MockDbService = {
-  // ─── READING HISTORY ──────────────────────────────────────────────────────
-  // Lịch sử nghe giờ được lưu trực tiếp bằng API
-  updateReadingProgress(userId, bookId, progressPct, totalDurationSec = 0) {
-    if (!userId || !bookId) return;
-    fetch('/api/history', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId,
-        bookId,
-        progress: Math.min(100, Math.max(0, Math.round(progressPct))),
-        lastListened: new Date().toISOString()
-      })
-    }).catch(e => console.error(e));
-  },
 
-  // ─── VIEWS (Lượt nghe) ───────────────────────────────────────────────────
-  // Dữ liệu lượt nghe hiện đã được đồng bộ chuẩn với database.json
+  // ─── VIEWS (Lượt xem) ─────────────────────────────────────────────
   getViewCount(book) {
     return book?.viewCount || 0;
   },
 
   incrementView(bookId) {
-    fetch(`/api/books/${bookId}/view`, { method: 'POST' })
-      .catch(e => console.error(e));
+    ApiService.incrementView(bookId).catch(console.error);
   },
 
-  // ─── FAVORITES ────────────────────────────────────────────────────────────
-  // API Calls (Fire-and-forget, since UI updates optimistic local state)
+  // ─── READING HISTORY ──────────────────────────────────────────────
+  updateReadingProgress(userId, bookId, progressPct, totalDurationSec = 0) {
+    if (!userId || !bookId) return;
+    const isFinished = progressPct >= 95;
+    ApiService.upsertHistory(userId, bookId, null, Math.round(progressPct), isFinished)
+      .catch(console.error);
+  },
+
+  // ─── FAVORITES ────────────────────────────────────────────────────
   addFavorite(userId, bookId) {
-    fetch('/api/favorites', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, bookId })
-    }).catch(e => console.error(e));
+    ApiService.toggleFavorite(userId, bookId).catch(console.error);
   },
 
   removeFavorite(userId, bookId) {
-    fetch(`/api/favorites/${userId}/${bookId}`, { method: 'DELETE' })
-      .catch(e => console.error(e));
+    ApiService.removeFavorite(userId, bookId).catch(console.error);
   },
 
   isFavorite(userId, bookId, dbFavIds = []) {
     return dbFavIds.includes(bookId);
   },
 
-  // ─── COMMENTS ─────────────────────────────────────────────────────────────
-  // Do server API lưu thẳng vào database.json, không cần merge
+  // ─── COMMENTS ─────────────────────────────────────────────────────
   mergeComments(dbComments = []) {
     return [...dbComments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   },
 
   addComment(comment) {
-    if (comment && comment.id) comment.id = parseInt(comment.id, 10);
-    fetch('/api/comments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(comment)
-    }).catch(e => console.error(e));
+    ApiService.addComment(comment).catch(console.error);
   },
 
   editComment(commentId, payload) {
-    const cid = parseInt(commentId, 10);
-    fetch(`/api/comments/${cid}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).catch(e => console.error(e));
+    ApiService.editComment(parseInt(commentId, 10), payload).catch(console.error);
   },
 
   deleteComment(commentId) {
-    const cid = parseInt(commentId, 10);
-    fetch(`/api/comments/${cid}`, { method: 'DELETE' })
-      .catch(e => console.error(e));
+    ApiService.deleteComment(parseInt(commentId, 10)).catch(console.error);
   },
 };

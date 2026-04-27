@@ -1,12 +1,11 @@
 import { AuthService } from '../services/AuthService.js';
 import { MockDbService } from '../services/MockDbService.js';
+import { ApiService } from '../services/ApiService.js';
 import '../explore.css';
 
 /**
  * BookDetailPage — Full page view for a single book.
  * Route: #book?id=N
- * Shows: cover, author, description, chapters list, comment section.
- * Click "Nghe ngay" → navigate to #player?id=N
  */
 export class BookDetailPage {
   constructor() {
@@ -22,55 +21,68 @@ export class BookDetailPage {
 
   async fetchData(bookId) {
     this.bookId = parseInt(bookId);
-    const res = await fetch('/database.json?t=' + Date.now());
-    const data = await res.json();
+    try {
+      // Lấy chi tiết sách từ vw_BookDetails
+      const book = await ApiService.getBook(this.bookId);
+      this.book = book ? { ...book, id: book.bookId || book.id, name: book.bookName || book.name } : null;
 
-    this.book = data.books.find(b => b.id === this.bookId);
-    if (!this.book) { this.isLoading = false; this._reRender(); return; }
+      if (!this.book) { this.isLoading = false; this._reRender(); return; }
 
-    const user = AuthService.getUser();
-    const isAdmin = user?.roleId === 1;
-    // Map authorId properly using relationships if needed, or if book.authorId is the same as the user's mapped AuthorId
-    const isOwner = user && user.roleId === 3 && this.book.authorId === user.authorId;
-    
-    const isApproved = !this.book.approvalStatus || this.book.approvalStatus === 'APPROVED';
-    
-    // Nếu sách bị ẩn hoặc CHƯA DUYỆT, chỉ Admin hoặc Tác giả mới xem được
-    if ((this.book.isHidden || !isApproved) && !isAdmin && !isOwner) {
+      const user = AuthService.getUser();
+      const isAdmin  = user?.roleId === 1;
+      const isOwner  = user && user.roleId === 3 && this.book.submittedByUserId === user.id;
+      const isApproved = !this.book.approvalStatus || this.book.approvalStatus === 'APPROVED';
+
+      if ((this.book.isHidden || !isApproved) && !isAdmin && !isOwner) {
+        this.book = null; this.isLoading = false; this._reRender(); return;
+      }
+
+      // Author từ view đã có sẵn
+      this.author = {
+        id: book.authorId,
+        firstName: book.authorFirstName,
+        lastName: book.authorLastName,
+        imagineUrl: book.authorImageUrl,
+        fullName: book.authorFullName,
+      };
+
+      // Chapters
+      const chapters = await ApiService.getBookChapters(this.bookId);
+      this.chapters = Array.isArray(chapters)
+        ? chapters.sort((a, b) => a.chapterNumber - b.chapterNumber)
+        : [];
+
+      // Comments
+      const comments = await ApiService.getComments(this.bookId);
+      this.allComments = Array.isArray(comments) ? comments : [];
+      this.comments    = this.allComments;
+      this.users       = [];
+
+      // Yêu thích
+      if (user) {
+        const favs = await ApiService.getFavorites(user.id).catch(() => []);
+        const favIds = Array.isArray(favs) ? favs.map(f => f.bookId) : [];
+        this.isFavorite = favIds.includes(this.bookId);
+      } else {
+        this.isFavorite = false;
+      }
+
+      // More books by same author - dùng getAllBooks rồi lọc
+      if (book.authorId) {
+        const allRaw = await ApiService.getAllBooks().catch(() => []);
+        const all = Array.isArray(allRaw) ? allRaw.map(b => ({
+          ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+        })) : [];
+        this.moreBooks = all
+          .filter(b => b.authorId === book.authorId && b.id !== this.bookId)
+          .slice(0, 5);
+      } else {
+        this.moreBooks = [];
+      }
+    } catch (e) {
+      console.error('BookDetailPage fetchData error:', e);
       this.book = null;
-      this.isLoading = false;
-      this._reRender();
-      return;
     }
-
-    const rel = (data.authorsOfBooks || []).find(r => r.BookId === this.bookId);
-    this.author = rel ? (data.author || []).find(a => a.id === rel.AuthorId) : null;
-
-    this.chapters = (data.audioChapter || [])
-      .filter(c => c.bookId === this.bookId)
-      .sort((a, b) => a.chapterNumber - b.chapterNumber);
-
-    // Comments: gộp DB + localStorage, lọc đã xóa, sắp xếp mới nhất
-    const allComments = MockDbService.mergeComments(data.comments || []);
-    this.allComments = allComments;
-    this.comments = allComments.filter(c => c.bookId === this.bookId);
-
-    // Related users for comment display
-    this.users = data.user || [];
-
-    // Lấy trạng thái yêu thích từ MockDbService (bao gồm DB tĩnh)
-    if (user) {
-      const userFavs = (data.userFavorites || []).filter(f => f.userId === user.id).map(f => f.bookId);
-      this.isFavorite = MockDbService.isFavorite(user.id, this.bookId, userFavs);
-    } else {
-      this.isFavorite = false;
-    }
-
-    // More books by same author
-    const authorBookIds = (data.authorsOfBooks || [])
-      .filter(r => r.AuthorId === rel?.AuthorId && r.BookId !== this.bookId)
-      .map(r => r.BookId);
-    this.moreBooks = data.books.filter(b => authorBookIds.includes(b.id) && (!b.approvalStatus || b.approvalStatus === 'APPROVED')).slice(0, 4);
 
     this.isLoading = false;
     this._reRender();
@@ -493,36 +505,43 @@ export class BookDetailPage {
     });
 
     // Submit comment
-    document.getElementById('submit-comment')?.addEventListener('click', () => {
+    document.getElementById('submit-comment')?.addEventListener('click', async () => {
       const input = document.getElementById('comment-input');
       const text = input?.value.trim();
       if (!text) { input.style.borderColor = '#ff4757'; return; }
 
       const user = AuthService.getUser();
+      if (!user) { alert('Vui lòng đăng nhập để bình luận!'); return; }
+
       if (this.editingCommentId) {
         // Edit mode
         const cid = this.editingCommentId;
         const target = this.comments.find(c => parseInt(c.id, 10) === parseInt(cid, 10));
         if (target) {
-          target.content = text;
-          target.rating = selectedRating;
-          MockDbService.editComment(cid, { content: text, rating: selectedRating });
+          try {
+            await ApiService.editComment(cid, { content: text, rating: selectedRating });
+            target.content = text;
+            target.rating = selectedRating;
+          } catch (e) { console.error('Edit comment error:', e); }
         }
         this.editingCommentId = null;
         this._toast('Đã cập nhật bình luận!');
       } else {
         // Add new
-        const newComment = {
-          id: Date.now(),
-          bookId: this.bookId,
-          userId: user.id,
-          content: text,
-          rating: selectedRating,
-          createdAt: new Date().toISOString()
-        };
-
-        this.comments.unshift(newComment);
-        MockDbService.addComment(newComment);
+        try {
+          await ApiService.addComment({
+            bookId: this.bookId,
+            userId: user.userId || user.id,
+            content: text,
+            rating: selectedRating,
+          });
+          // Reload comments
+          const updated = await ApiService.getComments(this.bookId).catch(() => []);
+          this.comments = Array.isArray(updated) ? updated : [];
+          this.allComments = this.comments;
+        } catch (e) {
+          console.error('Add comment error:', e);
+        }
         this._toast('Đã gửi bình luận!');
       }
 
@@ -564,18 +583,16 @@ export class BookDetailPage {
     });
 
     // Favorite toggle
-    document.getElementById('fav-btn')?.addEventListener('click', () => {
+    document.getElementById('fav-btn')?.addEventListener('click', async () => {
       const user = AuthService.getUser();
       if (!user) {
         alert('Vui lòng đăng nhập để thêm vào yêu thích!');
         return;
       }
-      this.isFavorite = !this.isFavorite;
-      if (this.isFavorite) {
-        MockDbService.addFavorite(user.id, this.bookId);
-      } else {
-        MockDbService.removeFavorite(user.id, this.bookId);
-      }
+      try {
+        await ApiService.toggleFavorite(user.userId || user.id, this.bookId);
+        this.isFavorite = !this.isFavorite;
+      } catch (e) { console.error('Favorite toggle error:', e); }
       this._reRender();
       this._toast(this.isFavorite ? 'Đã thêm vào yêu thích!' : 'Đã bỏ yêu thích!');
     });
@@ -583,10 +600,13 @@ export class BookDetailPage {
     // Delete comment
     document.querySelectorAll('.delete-comment-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        this._confirm('Bạn có chắc muốn xóa bình luận này? Hành động này không thể hoàn tác.', () => {
+        this._confirm('Bạn có chắc muốn xóa bình luận này? Hành động này không thể hoàn tác.', async () => {
           const cid = parseInt(btn.dataset.cid, 10);
-          this.comments = this.comments.filter(c => parseInt(c.id, 10) !== cid);
-          MockDbService.deleteComment(cid);
+          try {
+            await ApiService.deleteComment(cid);
+            this.comments = this.comments.filter(c => parseInt(c.id, 10) !== cid);
+            this.allComments = this.comments;
+          } catch (e) { console.error('Delete comment error:', e); }
           this._reRender();
           this._toast('Đã xóa bình luận!');
         });

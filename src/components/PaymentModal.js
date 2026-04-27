@@ -410,48 +410,52 @@ export class PaymentModal {
     // Simulate payment processing (1.5–2.5s)
     const delay = 1500 + Math.random() * 1000;
     setTimeout(async () => {
-      // Update subscription in session
       const plan = this._selectedPlan;
-      if (plan) {
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + (plan.duration || 30));
-        
-        const currentUser = AuthService.getUser();
-        if (currentUser) {
-          try {
-            const res = await fetch('/api/subscription', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: currentUser.id,
-                action: 'SUBSCRIBE',
-                plan: plan.id,
-                endDate: endDate.toISOString(),
-                paymentInfo: paymentInfo
-              })
-            });
-            const data = await res.json();
-            if (data.success && data.data) {
-              AuthService.updateUser({
-                subscriptionPlan: data.data.subscriptionPlan,
-                subscriptionEndDate: data.data.subscriptionEndDate,
-                paymentInfo: data.data.paymentInfo,
-                subscriptionHistory: data.data.subscriptionHistory
-              });
-            } else {
-              throw new Error('API failed');
-            }
-          } catch (err) {
-            console.error(err);
-            AuthService.updateUser({
-              subscriptionPlan: plan.id,
-              subscriptionEndDate: endDate.toISOString(),
-              paymentInfo: paymentInfo
-            });
-          }
-        }
+      if (!plan) return;
+
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + (plan.duration || 30));
+
+      const currentUser = AuthService.getUser();
+      if (!currentUser) {
+        alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        this.close();
+        return;
       }
-      this._renderStep('success');
+
+      try {
+        const res = await fetch('/api/subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            action: 'SUBSCRIBE',
+            plan: plan.id,
+            endDate: endDate.toISOString(),
+            paymentInfo: paymentInfo
+          })
+        });
+        const data = await res.json();
+
+        if (data.success && data.data) {
+          // Lưu vào session
+          AuthService.updateUser({
+            subscriptionPlan: data.data.subscriptionPlan,
+            subscriptionEndDate: data.data.subscriptionEndDate,
+            paymentInfo: data.data.paymentInfo,
+          });
+          this._renderStep('success');
+        } else {
+          // API trả về lỗi cụ thể
+          const errMsg = data.error || 'Đăng ký thất bại. Vui lòng thử lại.';
+          this._renderStep('pay');
+          alert('❌ ' + errMsg);
+        }
+      } catch (err) {
+        console.error('Payment API error:', err);
+        this._renderStep('pay');
+        alert('❌ Lỗi kết nối mạng. Vui lòng kiểm tra server và thử lại.');
+      }
     }, delay);
   }
 }

@@ -1,5 +1,6 @@
 import '../pages.css';
 import { MockDbService } from '../services/MockDbService.js';
+import { ApiService } from '../services/ApiService.js';
 
 export class AuthorsPage {
   constructor() {
@@ -11,19 +12,41 @@ export class AuthorsPage {
   }
 
   async fetchData() {
-    const res = await fetch('/database.json?t=' + Date.now());
-    const data = await res.json();
-    this.authors = data.author;
-    this.books = (data.books || []).filter(b => (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden);
-    this.authorsOfBooks = data.authorsOfBooks || [];
-    this.isLoading = false;
-    this._reRender();
-    this._attachEvents();
+    try {
+      const [stats, booksRaw] = await Promise.all([
+        ApiService.getAuthorStats(),
+        ApiService.getAllBooks(),
+      ]);
+
+      const books = Array.isArray(booksRaw) ? booksRaw.map(b => ({
+        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+      })) : [];
+
+      this.authorStats = Array.isArray(stats) ? stats : [];
+      this.authors = this.authorStats.map(a => {
+        const authorBooks = books.filter(b => b.authorId === a.authorId);
+        return {
+          id: a.authorId,
+          firstName: a.firstName,
+          lastName: a.lastName,
+          imagineUrl: a.imagineUrl,
+          description: a.authorBio,
+          _bks: authorBooks,
+          _views: a.totalViews || 0,
+        };
+      });
+    } catch (e) {
+      console.error('AuthorsPage fetch error:', e);
+    } finally {
+      this.isLoading = false;
+      this._reRender();
+      this._attachEvents();
+    }
   }
 
   _getBooksForAuthor(authorId) {
-    const bookIds = this.authorsOfBooks.filter(r => r.AuthorId === authorId).map(r => r.BookId);
-    return this.books.filter(b => bookIds.includes(b.id));
+    const a = this.authors.find(x => x.id === authorId);
+    return a ? (a._bks || []) : [];
   }
 
   _fmtViews(n) {
@@ -31,11 +54,8 @@ export class AuthorsPage {
   }
 
   _getAuthorStats() {
-    return this.authors.map(a => {
-      const bks = this._getBooksForAuthor(a.id);
-      const views = bks.reduce((s, b) => s + MockDbService.getViewCount(b), 0);
-      return { ...a, _bks: bks, _views: views };
-    });
+    // Dữ liệu đã có sẵn từ vw_AuthorStats
+    return this.authors;
   }
 
   // ══════════════════════════════════════════════════════════════

@@ -1,6 +1,7 @@
 import { AuthService } from '../services/AuthService.js';
 import { PaymentModal } from '../components/PaymentModal.js';
 import { MockDbService } from '../services/MockDbService.js';
+import { ApiService } from '../services/ApiService.js';
 
 export class UserPage {
   constructor() {
@@ -15,59 +16,76 @@ export class UserPage {
   async fetchData() {
     try {
       const currentUser = AuthService.getUser();
-      const res = await fetch('/database.json?t=' + Date.now());
-      const data = await res.json();
-      const dbUser = data.user.find(u => u.id === currentUser.id) || {};
 
-      const userSubs = (data.userSubscriptions || [])
-        .filter(s => s.userId === this.userData?.id || s.userId === currentUser.id)
-        .sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+      // Lấy profile user từ MySQL (vw_UserProfile)
+      const userProfile = await ApiService.getUser(currentUser.id);
+      const dbUser = userProfile || {};
 
-      const activeSub = userSubs[0];
+      // Lấy subscription
+      const subs = await ApiService.getSubscription(currentUser.id).catch(() => []);
+      const activeSub = Array.isArray(subs) ? subs.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0] : null;
 
       if (activeSub) {
-        dbUser.subscriptionPlan = activeSub.planId;
+        dbUser.subscriptionPlan = activeSub.planId || dbUser.currentPlanId;
         dbUser.subscriptionEndDate = activeSub.endDate;
         dbUser.paymentInfo = activeSub.paymentInfo;
       } else {
-        dbUser.subscriptionPlan = 'FREE';
-        dbUser.subscriptionEndDate = null;
+        dbUser.subscriptionPlan = dbUser.currentPlanId || 'FREE';
+        dbUser.subscriptionEndDate = dbUser.subEndDate || null;
         dbUser.paymentInfo = null;
       }
+      dbUser.subscriptionHistory = Array.isArray(subs) ? subs : [];
 
-      dbUser.subscriptionHistory = userSubs;
+      this.userData = this._normalizeUser({ ...currentUser, ...dbUser, id: dbUser.userId || currentUser.id });
 
-      this.userData = this._normalizeUser({ ...currentUser, ...dbUser });
-      this.books = data.books;
+      // Lấy tất cả sách (cho hiển thị thumbnail lịch sử)
+      const booksRaw = await ApiService.getAllBooks().catch(() => []);
+      this.books = Array.isArray(booksRaw) ? booksRaw.map(b => ({ ...b, id: b.bookId || b.id, name: b.bookName || b.name })) : [];
 
-      // Gộp comments từ database + localStorage, lọc theo userId và sắp xếp mới nhất trước
-      const allComments = MockDbService.mergeComments(data.comments || []);
-      this.comments = allComments.filter(c => c.userId === this.userData.id);
+      // Lấy comments của user từ MySQL
+      const commentsRaw = await ApiService.getUserComments(this.userData.id).catch(() => []);
+      this.comments = Array.isArray(commentsRaw) ? commentsRaw.map(c => ({
+        id: c.id,
+        bookId: c.bookId,
+        bookName: c.bookName,
+        bookThumbnail: c.bookThumbnail,
+        content: c.content,
+        rating: c.rating || 5,
+        createdAt: c.createdAt,
+      })) : [];
 
-      // Lấy lịch sử nghe từ bảng listeningAudioBook
-      const allHistory = data.listeningAudioBook || [];
-      this.readingHistory = allHistory
-        .filter(h => h.userId === this.userData.id)
-        .sort((a, b) => new Date(b.lastListenedAt) - new Date(a.lastListenedAt))
-        .map(h => ({
-          bookId: h.bookId,
-          progress: h.audioTimeline || 0,
-          lastListened: h.lastListenedAt
-        }));
+      // Lấy lịch sử nghe từ MySQL (vw_ListeningHistory)
+      const historyRaw = await ApiService.getHistory(this.userData.id).catch(() => []);
+      this.readingHistory = Array.isArray(historyRaw) ? historyRaw.map(h => ({
+        bookId: h.bookId,
+        progress: h.audioTimeline || 0,
+        lastListened: h.lastListenedAt,
+        bookName: h.bookName,
+        bookThumbnail: h.bookThumbnail,
+      })) : [];
 
       // Lấy danh sách yêu thích
-      this.favoriteIds = (data.userFavorites || []).filter(f => f.userId === this.userData.id).map(f => f.bookId);
+      const favsRaw = await ApiService.getFavorites(this.userData.id).catch(() => []);
+      this.favoriteIds = Array.isArray(favsRaw) ? favsRaw.map(f => f.bookId) : [];
 
-      this.plans = data.subscriptionPlans || [];
+      // Plans tĩnh
+      this.plans = [
+        { id: 'FREE',    name: 'Miễn phí',  price: 0,     duration: 0,  features: ['Nghe thử 30 giây/sách'] },
+        { id: 'BASIC',   name: 'Cơ bản',    price: 49000, duration: 30, features: ['Nghe tối đa 10 sách/tháng'] },
+        { id: 'PREMIUM', name: 'Premium',   price: 99000, duration: 30, features: ['Nghe không giới hạn'] },
+      ];
     } catch (err) {
-      console.error(err);
+      console.error('UserPage fetchData error:', err);
     } finally {
       this.isLoading = false;
       this.reRender();
     }
   }
 
+
+
   _escape(value) {
+
     return String(value ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -82,6 +100,21 @@ export class UserPage {
       return { ...user, subscriptionPlan: 'PREMIUM' };
     }
     return { ...user, subscriptionPlan: user.subscriptionPlan || 'FREE' };
+  }
+
+  _showToast(msg, type = 'success') {
+    const existing = document.getElementById('user-page-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'user-page-toast';
+    const color = type === 'success' ? '#2ed573' : '#ff4757';
+    const icon  = type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation';
+    toast.style.cssText = `position:fixed;bottom:100px;right:24px;z-index:99999;
+      background:${color};color:#fff;padding:0.8rem 1.4rem;border-radius:12px;font-weight:600;
+      box-shadow:0 8px 24px rgba(0,0,0,0.35);animation:pmSlideIn 0.3s ease;max-width:320px;`;
+    toast.innerHTML = `<i class="fa-solid ${icon}" style="margin-right:8px;"></i>${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
   }
 
   _roleLabel(roleId) {
@@ -319,6 +352,16 @@ export class UserPage {
     }
 
     const u = this.userData;
+    if (!u) {
+      container.innerHTML = `<div style="text-align:center;padding:5rem;color:var(--text-muted);">
+        <i class="fa-solid fa-circle-exclamation fa-3x" style="margin-bottom:1rem;color:#ff4757;"></i>
+        <p style="font-size:1.1rem;">Không thể tải dữ liệu. Vui lòng <a href="#explore" style="color:var(--color-primary);">quay lại trang chủ</a> hoặc thử lại.</p>
+        <button onclick="window.location.reload()" class="btn btn-primary" style="margin-top:1.5rem;padding:.75rem 2rem;">
+          <i class="fa-solid fa-rotate-right"></i> Tải lại
+        </button>
+      </div>`;
+      return;
+    }
     const avatarUrl = u.thumbnailUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent((u.firstName || '') + '+' + (u.lastName || ''))}&background=7c3aed&color=fff&size=128`;
     const plan = u.roleId === 1 || u.roleId === 3 ? 'PREMIUM' : (u.subscriptionPlan || 'FREE');
     const roleLabel = this._roleLabel(u.roleId);
@@ -515,7 +558,7 @@ export class UserPage {
         const bookId = parseInt(btn.dataset.favId);
         const currentUser = AuthService.getUser();
         if (!currentUser) return;
-        MockDbService.removeFavorite(currentUser.id, bookId);
+        ApiService.removeFavorite(currentUser.id, bookId).catch(console.error);
         this.favoriteIds = [...this.favoriteIds].filter(id => id !== bookId);
         document.getElementById('favorites-grid').innerHTML = this._buildFavorites();
         this._attachFavoriteEvents();
@@ -570,7 +613,7 @@ export class UserPage {
       btn.addEventListener('click', (e) => {
         this._confirm('Bạn có chắc muốn xóa đánh giá này?', () => {
           const cid = parseInt(btn.dataset.cid, 10);
-          MockDbService.deleteComment(cid);
+          ApiService.deleteComment(cid).catch(console.error);
           this.comments = this.comments.filter(c => parseInt(c.id, 10) !== cid);
           this.reRender();
         });
@@ -591,7 +634,7 @@ export class UserPage {
 
             comment.content = newText.trim();
             comment.rating = newRating;
-            MockDbService.editComment(cid, { content: comment.content, rating: comment.rating });
+            ApiService.editComment(cid, { content: comment.content, rating: comment.rating }).catch(console.error);
             this.reRender();
           }
         }
@@ -615,7 +658,7 @@ export class UserPage {
       this.reRender();
     });
 
-    document.getElementById('profile-edit-form')?.addEventListener('submit', (e) => {
+    document.getElementById('profile-edit-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.currentTarget;
       const data = new FormData(form);
@@ -628,10 +671,25 @@ export class UserPage {
         thumbnailUrl: data.get('thumbnailUrl')?.toString().trim() || '',
         addresses: data.get('addresses')?.toString().trim() || '',
       };
-      const updatedUser = AuthService.updateUser(updates);
-      this.userData = this._normalizeUser({ ...this.userData, ...updatedUser });
-      this.isEditing = false;
-      this.reRender();
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const ogHtml = submitBtn?.innerHTML;
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+
+      try {
+        // Lưu vào MySQL
+        await ApiService.updateProfile(this.userData.id, updates);
+        const updatedUser = AuthService.updateUser(updates);
+        this.userData = this._normalizeUser({ ...this.userData, ...updatedUser });
+        this.isEditing = false;
+        this.reRender();
+        this._showToast('Cập nhật hồ sơ thành công!', 'success');
+      } catch(err) {
+        console.error('Update profile error:', err);
+        this._showToast('Lỗi cập nhật hồ sơ: ' + (err.message || 'Thử lại sau'), 'error');
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = ogHtml; }
+      }
     });
 
     // --- Subscription buttons ---
@@ -735,7 +793,7 @@ export class UserPage {
       btn.disabled = true;
 
       try {
-        const res = await fetch('/api/users/update-password', {
+        const res = await fetch('/api/auth/users/update-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: this.userData.id, oldPassword: oldPass, newPassword: newPass })
@@ -785,7 +843,7 @@ export class UserPage {
       btn.disabled = true;
 
       try {
-        const res = await fetch('/api/users/delete', {
+        const res = await fetch('/api/auth/users/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: this.userData.id, password: pass })

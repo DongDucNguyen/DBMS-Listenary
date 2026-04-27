@@ -1,5 +1,6 @@
 import { AuthService } from '../services/AuthService.js';
 import { MockDbService } from '../services/MockDbService.js';
+import { ApiService } from '../services/ApiService.js';
 
 export class AuthorPage {
   constructor() {
@@ -19,33 +20,70 @@ export class AuthorPage {
   async fetchData() {
     try {
       const currentUser = AuthService.getUser();
-      const res = await fetch('/database.json?t=' + Date.now());
-      const data = await res.json();
 
-      // Lấy thông tin tác giả tương ứng với user đang đăng nhập
-      this.authorData = data.author.find(a => a.id === currentUser.authorId);
-      // Lấy sách của tác giả qua bảng authorsOfBooks + trường authorId trực tiếp
-      const authorBookIdsFromJoin = (data.authorsOfBooks || [])
-        .filter(r => r.AuthorId === currentUser.authorId)
-        .map(r => r.BookId);
-      this.authorBooks = data.books.filter(b => 
-        authorBookIdsFromJoin.includes(b.id) || b.authorId === currentUser.authorId
+      // Lấy thống kê tác giả từ MySQL
+      const authorStats = await ApiService.getAuthorStats();
+      const myStats = Array.isArray(authorStats)
+        ? authorStats.find(a => a.authorId === currentUser.authorId)
+        : null;
+
+      this.authorData = myStats ? {
+        id: myStats.authorId,
+        firstName: myStats.firstName,
+        lastName: myStats.lastName,
+        imagineUrl: myStats.imagineUrl,
+        description: myStats.authorBio,
+      } : null;
+
+      // Lấy sách của tác giả từ MySQL
+      const booksRaw = await ApiService.getAllBooks();
+      const allBooks = Array.isArray(booksRaw) ? booksRaw.map(b => ({
+        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+      })) : [];
+
+      // Lọc sách của tác giả hiện tại (authorId match)
+      this.authorBooks = allBooks.filter(b =>
+        b.authorId === currentUser.authorId || b.submittedByUserId === currentUser.id
       );
-      // Lấy comment cho sách của tác giả
-      const authorBookIds = this.authorBooks.map(b => b.id);
-      this.allComments = (data.comments || []).filter(c => authorBookIds.includes(c.bookId));
-      this.allBooks = data.books;
-      this.allUsers = data.user;
-      this.categories = data.category || [];
-      this.publishingHouses = data.publishingHouse || [];
-      this.allData = data;
+
+      // Lấy pending books
+      const pendingRaw = await ApiService.getPendingBooks();
+      const pendingBooks = Array.isArray(pendingRaw) ? pendingRaw.map(b => ({
+        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+        approvalStatus: 'PENDING',
+      })).filter(b => b.submittedByUserId === currentUser.id) : [];
+
+      // Kết hợp sách đã duyệt + chờ duyệt
+      const approvedIds = new Set(this.authorBooks.map(b => b.id));
+      this.authorBooks = [...this.authorBooks, ...pendingBooks.filter(b => !approvedIds.has(b.id))];
+
+      this.allBooks = allBooks;
+      this.allUsers = [];
+      this.categories = [];
+      this.publishingHouses = [];
+
+      // Lấy comments cho tất cả sách của tác giả
+      const allCommentsRaw = await ApiService.getAllComments().catch(() => []);
+      const myBookIds = new Set(this.authorBooks.map(b => b.id));
+      this.allComments = Array.isArray(allCommentsRaw)
+        ? allCommentsRaw.filter(c => myBookIds.has(c.bookId)).map(c => ({
+            ...c,
+            id: c.id,
+            bookId: c.bookId,
+            bookName: c.bookName,
+            username: c.username || `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Ẩn danh',
+          }))
+        : [];
+      this.allData = {};
     } catch (err) {
-      console.error(err);
+      console.error('AuthorPage fetchData error:', err);
     } finally {
       this.isLoading = false;
       this.reRender();
     }
   }
+
+
 
   _totalListens() {
     return this.authorBooks.reduce((sum, b) => sum + (b.weeklyViewCount || Math.floor(Math.random() * 50000) + 500), 0);
@@ -464,7 +502,7 @@ export class AuthorPage {
   // ─── Quản lý bình luận sách ───────────────────────────────────────
   _deleteComment(cid) {
     this.allComments = this.allComments.filter(c => parseInt(c.id, 10) !== cid);
-    MockDbService.deleteComment(cid);
+    ApiService.deleteComment(cid).catch(console.error);
 
     // Cập nhật modal nếu đang mở
     const modal = document.getElementById('author-comments-modal');

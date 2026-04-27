@@ -1,5 +1,6 @@
 import { AuthService } from '../services/AuthService.js';
 import { MockDbService } from '../services/MockDbService.js';
+import { ApiService } from '../services/ApiService.js';
 
 export class AdminPage {
   constructor() {
@@ -13,22 +14,67 @@ export class AdminPage {
 
   async fetchData() {
     try {
-      const res = await fetch('/database.json?t=' + Date.now());
-      const data = await res.json();
-      this.users = data.user;
-      this.authors = data.author;
-      this.books = data.books;
-      this.comments = data.comments || [];
-      this.roles = data.role;
-      this.categories = data.category || [];
-      this.userSubscriptions = data.userSubscriptions || [];
+      // Lấy song song từ MySQL backend
+      const [usersRaw, booksRaw, pendingRaw, authorStatsRaw, commentsRaw] = await Promise.all([
+        ApiService.getAdminUsers(),
+        ApiService.getAllBooks(),
+        ApiService.getPendingBooks(),
+        ApiService.getAuthorStats(),
+        ApiService.getAllComments(),
+      ]);
+
+      this.users = Array.isArray(usersRaw) ? usersRaw.map(u => ({
+        ...u, id: u.userId || u.id,
+      })) : [];
+
+      // Kết hợp sách đã duyệt + chờ duyệt
+      const approved = Array.isArray(booksRaw) ? booksRaw.map(b => ({
+        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+      })) : [];
+      const pending = Array.isArray(pendingRaw) ? pendingRaw.map(b => ({
+        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+        approvalStatus: 'PENDING',
+      })) : [];
+      // Gộp, tránh duplicate
+      const allIds = new Set(approved.map(b => b.id));
+      this.books = [...approved, ...pending.filter(b => !allIds.has(b.id))];
+
+      this.authorStats = Array.isArray(authorStatsRaw) ? authorStatsRaw : [];
+      // Tạo this.authors để các helper tương thích
+      this.authors = this.authorStats.map(a => ({
+        id: a.authorId, firstName: a.firstName, lastName: a.lastName,
+      }));
+
+      // Load toàn bộ comments từ API
+      this.comments = Array.isArray(commentsRaw) ? commentsRaw.map(c => ({
+        ...c,
+        id: c.id,
+        userId: c.userId,
+        bookId: c.bookId,
+        bookName: c.bookName,
+        username: c.username || `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Ẩn danh',
+        userAvatar: c.userAvatar || '',
+        rating: c.rating || 0,
+        content: c.content || '',
+        createdAt: c.createdAt || '',
+      })) : [];
+
+      // Roles tĩnh (không cần DB)
+      this.roles = [
+        { id: 1, name: 'ROLE_ADMIN' },
+        { id: 2, name: 'ROLE_USER' },
+        { id: 3, name: 'ROLE_AUTHOR' },
+      ];
+      this.categories = [];
+      this.userSubscriptions = [];
     } catch (err) {
-      console.error(err);
+      console.error('AdminPage fetchData error:', err);
     } finally {
       this.isLoading = false;
       this.reRender();
     }
   }
+
 
   _getRoleName(roleId) {
     const role = this.roles?.find(r => r.id === roleId);
@@ -621,7 +667,7 @@ export class AdminPage {
         }
 
         // Persist
-        MockDbService.deleteComment(cid);
+        ApiService.deleteComment(cid).catch(console.error);
         this.comments = this.comments.filter(c => parseInt(c.id, 10) !== cid);
 
         // Cập nhật count
@@ -715,7 +761,11 @@ export class AdminPage {
         btn.disabled = true;
 
         try {
-          const res = await fetch(`/api/books/${bookId}/approve`, { method: 'POST' });
+          const res = await fetch(`/api/books/${bookId}/approve`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminId: AuthService.getUser()?.id || 1 })
+          });
           const result = await res.json();
           if (result.success) {
             // Animate out the pending card
@@ -744,10 +794,15 @@ export class AdminPage {
             
             // Update pending count badge
             this._updatePendingCount();
+            this._toast('Đã duyệt sách thành công!', 'success');
+          } else {
+            this._toast('Lỗi: ' + (result.error || 'Không thể duyệt sách'), 'error');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Duyệt';
+            btn.disabled = false;
           }
         } catch (err) {
           console.error(err);
-          alert('Có lỗi xảy ra khi duyệt sách.');
+          this._toast('Có lỗi xảy ra khi duyệt sách.', 'error');
           btn.innerHTML = '<i class="fa-solid fa-check"></i> Duyệt';
           btn.disabled = false;
         }
@@ -770,7 +825,7 @@ export class AdminPage {
           const res = await fetch(`/api/books/${bookId}/reject`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reason }),
+            body: JSON.stringify({ reason, adminId: AuthService.getUser()?.id || 1 }),
           });
           const result = await res.json();
           if (result.success) {
@@ -797,10 +852,15 @@ export class AdminPage {
             if (book) book.approvalStatus = 'REJECTED';
             
             this._updatePendingCount();
+            this._toast('Đã từ chối sách!', 'success');
+          } else {
+            this._toast('Lỗi: ' + (result.error || 'Không thể từ chối sách'), 'error');
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Từ chối';
+            btn.disabled = false;
           }
         } catch (err) {
           console.error(err);
-          alert('Có lỗi xảy ra khi từ chối sách.');
+          this._toast('Có lỗi xảy ra khi từ chối sách.', 'error');
           btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Từ chối';
           btn.disabled = false;
         }

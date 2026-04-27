@@ -1,6 +1,7 @@
 import '../pages.css';
 import '../search.css';
 import { MockDbService } from '../services/MockDbService.js';
+import { ApiService } from '../services/ApiService.js';
 
 const SEARCH_MODES = [
   { id: 'all', label: 'Tất cả', icon: 'fa-border-all' },
@@ -51,15 +52,21 @@ export class SearchPage {
 
   async fetchData() {
     try {
-      const res = await fetch('/database.json?t=' + Date.now());
-      const data = await res.json();
-
-      this.books = (data.books || []).filter(b => (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden);
-      this.authors = data.author || [];
-      this.authorsOfBooks = data.authorsOfBooks || [];
-      this.categories = data.category || [];
-      this.categoriesOfBooks = data.categoriesOfBooks || [];
-      this.publishingHouses = data.publishingHouse || [];
+      const [booksRaw, authorStats] = await Promise.all([
+        ApiService.getAllBooks(),
+        ApiService.getAuthorStats(),
+      ]);
+      this.books = Array.isArray(booksRaw) ? booksRaw.map(b => ({
+        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+      })) : [];
+      this.authors = Array.isArray(authorStats) ? authorStats.map(a => ({
+        id: a.authorId, firstName: a.firstName, lastName: a.lastName,
+        imagineUrl: a.imagineUrl, description: a.authorBio,
+      })) : [];
+      this.authorsOfBooks = [];
+      this.categories = [];
+      this.categoriesOfBooks = [];
+      this.publishingHouses = [];
     } catch (e) {
       console.error('SearchPage fetch error:', e);
     } finally {
@@ -170,25 +177,20 @@ export class SearchPage {
   }
 
   _bookFieldGroups(book) {
-    const authors = this._authorsForBook(book.id);
-    const categories = this._bookCategories(book.id);
-    const publisher = this._publisherForBook(book);
+    const authorName = book.authorFullName || `${book.authorFirstName||''} ${book.authorLastName||''}`.trim();
+    const categoryName = book.categoryName || '';
 
     return {
       book: [book.name],
-      author: authors.map(author => this._authorName(author)),
-      genre: categories.flatMap(category => [category.name, category.id]),
+      author: [authorName],
+      genre: [categoryName, String(book.categoryId||'')],
       meta: [
         book.description,
         book.country,
         book.language,
         book.pageNumber,
         book.releaseDate,
-        book.createdAt,
-        book.updatedAt,
-        publisher?.name,
-        publisher?.description,
-        ...this._primitiveValues(book),
+        book.publishingHouseName,
       ],
     };
   }
@@ -250,27 +252,25 @@ export class SearchPage {
     const match = this._matchGroups(groups);
     if (!match.matched) return null;
 
-    const authors = this._authorsForBook(book.id);
-    const categories = this._bookCategories(book.id);
-    const publisher = this._publisherForBook(book);
+    const authorName = book.authorFullName || `${book.authorFirstName||''} ${book.authorLastName||''}`.trim();
 
     return {
       kind: 'book',
       id: book.id,
       title: book.name || 'Không tên',
-      subtitle: authors.map(author => this._authorName(author)).join(', ') || book.country || 'Sách nói',
+      subtitle: authorName || book.country || 'Sách nói',
       image: book.thumbnailUrl || '',
       description: book.description || '',
-      popularity: this._views(book),
+      popularity: book.viewCount || 0,
       labels: match.labels,
       score: match.score,
       meta: [
         book.country,
         book.releaseDate,
         book.pageNumber ? `${book.pageNumber} trang` : '',
-        publisher?.name,
+        book.publishingHouseName,
       ].filter(Boolean),
-      genres: categories.map(category => category.name),
+      genres: [book.categoryName].filter(Boolean),
     };
   }
 

@@ -1,5 +1,6 @@
 import '../pages.css';
 import { MockDbService } from '../services/MockDbService.js';
+import { ApiService } from '../services/ApiService.js';
 
 // Map category → visual config (icon, gradient base colors)
 const CATEGORY_CONFIG = {
@@ -34,20 +35,23 @@ export class GenresPage {
   }
 
   async fetchData() {
-    const res = await fetch('/database.json?t=' + Date.now());
-    const data = await res.json();
-    this.books = (data.books || []).filter(b => (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden);
-    this.categories = data.category || [];
-    this.categoriesOfBooks = data.categoriesOfBooks || [];
-    
-    // Reverse lookup for extra genres
-    this.extraGenreBooks = {};
-    Object.entries(EXTRA_GENRES).forEach(([key, ids]) => {
-      this.extraGenreBooks[key] = ids;
-    });
-    
-    this.isLoading = false;
-    this._reRender();
+    try {
+      const raw = await ApiService.getAllBooks();
+      this.books = Array.isArray(raw) ? raw.map(b => ({
+        ...b, id: b.bookId || b.id, name: b.bookName || b.name,
+      })) : [];
+      this.categories = [];
+      this.categoriesOfBooks = [];
+      this.extraGenreBooks = {};
+      Object.entries(EXTRA_GENRES).forEach(([key, ids]) => {
+        this.extraGenreBooks[key] = ids;
+      });
+    } catch (e) {
+      console.error('GenresPage fetch error:', e);
+    } finally {
+      this.isLoading = false;
+      this._reRender();
+    }
   }
 
   _getBooksForCategory(catId) {
@@ -66,9 +70,9 @@ export class GenresPage {
     return [...base, ...extras];
   }
 
-  _fmtViews(b) {
-    const n = MockDbService.getViewCount(b);
-    return n >= 1000 ? (n/1000).toFixed(n>=10000?0:1)+'K' : n;
+  _fmtViews(n) {
+    if (typeof n === 'object') n = n.viewCount || 0; // handle book object
+    return n >= 1000 ? (n/1000).toFixed(n>=10000?0:1)+'K' : String(n||0);
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -237,7 +241,8 @@ export class GenresPage {
           </div>
         ` : `
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.5rem;margin-bottom:4rem;">
-            ${books.sort((a,b)=>MockDbService.getViewCount(b)-MockDbService.getViewCount(a)).map((b, i) => {
+            ${books.sort((a,b)=>(b.viewCount||b.weeklyViewCount||0)-(a.viewCount||a.weeklyViewCount||0)).map((b, i) => {
+              const authorName = b.authorFullName || `${b.authorFirstName||''} ${b.authorLastName||''}`.trim();
               const delay = Math.min(i * 40, 600);
               return `
                 <div class="hover-lift" data-bookid="${b.id}" style="
@@ -261,7 +266,6 @@ export class GenresPage {
                       onmouseout="this.style.transform='scale(1)';this.style.opacity='0.9'">
                       <i class="fa-solid fa-play"></i>
                     </button>
-                    <!-- Country badge -->
                     ${b.country ? `
                       <div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
                         padding:4px 8px;border-radius:8px;font-size:0.65rem;font-weight:700;color:#fff;">
@@ -271,12 +275,16 @@ export class GenresPage {
                   </div>
                   
                   <div style="padding:1rem;flex:1;display:flex;flex-direction:column;">
-                    <h4 style="font-size:0.95rem;font-weight:700;margin:0 0 0.4rem;color:var(--text-main);
+                    <h4 style="font-size:0.95rem;font-weight:700;margin:0 0 0.25rem;color:var(--text-main);
                       display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;">
                       ${b.name}
                     </h4>
+                    <p style="font-size:0.72rem;color:var(--color-secondary);margin:0 0 0.5rem;
+                      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      ${authorName}
+                    </p>
                     <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);">
-                      <span><i class="fa-solid fa-headphones" style="color:var(--color-secondary);"></i> ${this._fmtViews(b)}</span>
+                      <span><i class="fa-solid fa-headphones" style="color:var(--color-secondary);"></i> ${this._fmtViews(b.viewCount||0)}</span>
                     </div>
                   </div>
                 </div>

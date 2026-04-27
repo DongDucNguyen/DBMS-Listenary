@@ -1,5 +1,6 @@
 import '../pages.css';
 import { MockDbService } from '../services/MockDbService.js';
+import { ApiService } from '../services/ApiService.js';
 
 export class TrendingPage {
   constructor() {
@@ -11,19 +12,16 @@ export class TrendingPage {
 
   async fetchData() {
     try {
-      const res = await fetch('/database.json?t=' + Date.now());
-      const data = await res.json();
-
-      // Gán views từ MockDbService (kết hợp weeklyViewCount + lịch sử nghe thực)
-      this.books = (data.books || []).filter(b => (!b.approvalStatus || b.approvalStatus === 'APPROVED') && !b.isHidden).map(b => ({
+      const raw = await ApiService.getTrendingBooks(20);
+      this.books = Array.isArray(raw) ? raw.map(b => ({
         ...b,
-        views: MockDbService.getViewCount(b)
-      }))
-        .sort((a, b) => b.views - a.views)
-        .slice(0, 20);
-
-      this.authors = data.author;
-      this.authorsOfBooks = data.authorsOfBooks || [];
+        id: b.bookId || b.id,
+        name: b.bookName || b.name,
+        views: b.viewCount || 0,
+      })) : [];
+      // authors inline từ view (authorFullName đã có)
+      this.authors = [];
+      this.authorsOfBooks = [];
     } catch (e) {
       console.error('TrendingPage fetch error:', e);
     } finally {
@@ -75,7 +73,7 @@ export class TrendingPage {
     const [top1, top2, top3, ...rest] = this.books;
 
     // ── Hero ─────────────────────────────────────────────────────────────
-    const a1 = this._getAuthor(top1.id);
+    const a1Name = top1.authorFullName || `${top1.authorFirstName||''} ${top1.authorLastName||''}`.trim();
     const heroHtml = `
       <div style="
         position:relative;border-radius:24px;overflow:hidden;
@@ -118,7 +116,7 @@ export class TrendingPage {
             </h1>
 
             <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:0.5rem;">
-              ${a1 ? `<i class="fa-solid fa-pen-nib" style="margin-right:4px;"></i>${a1.firstName} ${a1.lastName}` : ''}
+              ${a1Name ? `<i class="fa-solid fa-pen-nib" style="margin-right:4px;"></i>${a1Name}` : ''}
               ${top1.country ? ` &nbsp;·&nbsp; ${top1.country}` : ''}
               ${top1.releaseDate ? ` &nbsp;·&nbsp; ${top1.releaseDate}` : ''}
             </p>
@@ -187,7 +185,7 @@ export class TrendingPage {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" id="trending-list">
         ${this.books.map((book, i) => {
-          const auth = this._getAuthor(book.id);
+          const authName = book.authorFullName || `${book.authorFirstName||''} ${book.authorLastName||''}`.trim();
           const isTop3 = i < 3;
           const delay = Math.min(i * 50, 500);
           return `
@@ -219,7 +217,7 @@ export class TrendingPage {
                 </div>
                 <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;
                              white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  ${auth ? `${auth.firstName} ${auth.lastName}` : '–'}
+                  ${authName || '–'}
                   ${book.country ? `· ${book.country}` : ''}
                 </div>
               </div>
