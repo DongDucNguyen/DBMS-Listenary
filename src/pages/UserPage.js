@@ -850,8 +850,41 @@ export class UserPage {
         });
         const d = await res.json();
         if (d.success) {
-          alert('Tài khoản của bạn đã được xóa.');
-          AuthService.logout(); // Redirect to login
+          // Đóng modal
+          const modal = document.getElementById('delete-account-modal');
+          if (modal) modal.style.display = 'none';
+
+          // Toast thông báo
+          const toast = document.createElement('div');
+          toast.style.cssText = `
+            position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+            background:rgba(20,20,30,0.97);border:1px solid #ff4757;
+            border-radius:20px;padding:2.5rem 3rem;z-index:999999;
+            text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.7);
+            animation:pmSlideIn 0.3s ease;min-width:300px;
+          `;
+          toast.innerHTML = `
+            <div style="font-size:3rem;color:#ff4757;margin-bottom:1rem;">
+              <i class="fa-solid fa-user-xmark"></i>
+            </div>
+            <h3 style="color:#fff;margin:0 0 0.5rem;">Tài khoản đã bị xóa</h3>
+            <p style="color:rgba(255,255,255,0.6);font-size:0.9rem;margin:0 0 1rem;">
+              Đang chuyển về trang đăng nhập...
+            </p>
+            <div style="width:100%;height:3px;background:rgba(255,71,87,0.2);border-radius:3px;overflow:hidden;">
+              <div id="delete-progress" style="height:100%;width:0%;background:#ff4757;border-radius:3px;transition:width 1.5s linear;"></div>
+            </div>
+          `;
+          document.body.appendChild(toast);
+          setTimeout(() => {
+            const bar = document.getElementById('delete-progress');
+            if (bar) bar.style.width = '100%';
+          }, 50);
+
+          // Logout và redirect sau 1.5s
+          setTimeout(() => {
+            AuthService.logout();
+          }, 1600);
         } else {
           errBox.textContent = d.error || 'Lỗi không xác định';
           errBox.style.display = 'block';
