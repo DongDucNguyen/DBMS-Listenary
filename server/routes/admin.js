@@ -69,11 +69,11 @@ router.post('/users/create', async (req, res) => {
     const [result] = await pool.query(
       `INSERT INTO user (username, encryptedPassword, firstName, lastName, email,
         phoneNumber, addresses, birthday, loginFailedAttempts, hasLocked,
-        createdAt, updatedAt, roleId, subscriptionPlan, thumbnailUrl, authorId)
-       VALUES (?,?,?,?,?,?,?,?,0,FALSE,NOW(),NOW(),?,?,?,?)`,
+        createdAt, updatedAt, roleId, thumbnailUrl, authorId)
+       VALUES (?,?,?,?,?,?,?,?,0,FALSE,NOW(),NOW(),?,?,?)`,
       [username, password, firstName||'', lastName||'', email,
        phoneNumber||null, addresses||null, birthday||null,
-       roleId, 'FREE', '', authorId]
+       roleId, '', authorId]
     );
     const [[newUser]] = await pool.query('SELECT * FROM vw_UserProfile WHERE userId = ?', [result.insertId]);
     res.json({ success: true, user: newUser });

@@ -12,7 +12,6 @@ router.post('/', async (req, res) => {
 
     if (action === 'CANCEL') {
       await pool.query('DELETE FROM usersubscriptions WHERE userId = ?', [userId]);
-      await pool.query("UPDATE user SET subscriptionPlan = 'FREE' WHERE id = ?", [userId]);
       return res.json({ success: true, data: { subscriptionPlan: 'FREE', subscriptionEndDate: null } });
     }
 
@@ -31,9 +30,6 @@ router.post('/', async (req, res) => {
     const [[sub]] = await pool.query(
       'SELECT * FROM usersubscriptions WHERE userId = ? ORDER BY startDate DESC LIMIT 1', [userId]
     );
-
-    // Cập nhật subscriptionPlan trong bảng user
-    await pool.query('UPDATE user SET subscriptionPlan = ? WHERE id = ?', [plan, userId]);
 
     res.json({
       success: true,

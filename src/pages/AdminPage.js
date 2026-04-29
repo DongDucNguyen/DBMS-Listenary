@@ -91,10 +91,11 @@ export class AdminPage {
   }
 
   _effectivePlan(user) {
+    // Admin/Author luôn được coi là PREMIUM
     if (user.roleId === 1 || user.roleId === 3) return 'PREMIUM';
-    const activeSub = this.userSubscriptions?.find(s => s.userId === user.id);
-    if (activeSub) return activeSub.planId;
-    return user.subscriptionPlan || 'FREE';
+    // currentPlanId đến từ vw_UserProfile (JOIN usersubscriptions WHERE endDate >= NOW())
+    // Nếu null → user chưa có gói hoặc gói đã hết hạn → FREE
+    return user.currentPlanId || 'FREE';
   }
 
   _getAuthorName(authorId) {
